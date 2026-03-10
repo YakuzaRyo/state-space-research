@@ -47,7 +47,7 @@ Rust 类型系统实现
 - 研究Kani model checker与状态空间验证的集成
 - 设计状态空间Agent的Rust核心数据结构
 
-### 2026-03-10 18:28 深入研究
+### 2026-03-10 18:58 深入研究（工具设计融合）
 **研究方向**: Rust类型系统实现状态空间
 **核心问题**: 如何用Rust类型系统实现状态空间?
 
@@ -66,11 +66,15 @@ Rust 类型系统实现
    - 论文: "HACSpec: A gateway to high-assurance cryptography" (POPL 2022)
    - 应用: 区块链投票智能合约形式化验证
 
-3. **现有代码草稿分析** (`drafts/20260309_1645_rust_typestate.rs`):
-   - StateSpaceGuard: 编译期状态机 (Unverified→Verified→Executed)
-   - SecretU32: 恒定时间操作的秘密整数
-   - ApiClient: 类型安全的API调用序列
+3. **现有代码草稿分析**:
+   - `drafts/20260309_1645_rust_typestate.rs`: 基础Typestate模式实现
+   - `drafts/20260310_1828_rust_kani_state.rs`: 多维状态空间 + Kani风格Contracts + Agent状态机
    - **局限性**: 纯类型系统无法处理"条件分支"(非确定性)场景
+
+4. **工具设计融合** (与方向10交叉):
+   - `drafts/20260310_1310_tool_design.rs`: 无缺陷工具设计原型
+   - 展示如何用Rust类型系统实现"硬边界"工具
+   - 核心模式: 纯函数 + 编译期状态约束 = 零运行时错误
 
 **架构洞察**:
 - **三层验证策略**:
@@ -82,15 +86,21 @@ Rust 类型系统实现
   - 核心数据结构用 Typestate 模式
   - 关键属性用 Kani 证明
   - 安全关键代码用 hacspec 规约
+- **工具设计核心原则** (交叉洞察):
+  - 硬边界 = 类型系统约束 (LLM物理上无法构造无效状态)
+  - 纯函数 = 相同输入→相同输出 (消除副作用不确定性)
+  - API边界 = 编译期白名单 (不在白名单的工具无法调用)
 
 **技术细节**:
 - Kani function contracts: `#[requires(...)]`, `#[ensures(...)]`
 - hacspec 通过 `hax` 输出到 F*/Coq/Lean 进行证明
 - Rust const generics 可实现编译期数值计算
+- 文件操作工具设计: `FileModeMarker` trait 强制约束读写模式
 
 **待验证假设**:
 - [x] 状态空间API的Rust实现是否可以完全避免运行时状态验证? (部分可行，但复杂分支需要Kani辅助)
 - [x] PhantomData是否足以处理复杂的多维状态空间? (可行，需配合泛型约束)
+- [x] Rust类型系统能否实现"无缺陷工具"? (可行，见tool_design.rs草稿)
 - [ ] 状态空间Agent的多线程交互如何用类型系统约束?
 - [ ] 如何设计"状态空间编译器"自动将DSL转换为Rust类型?
 
@@ -98,6 +108,7 @@ Rust 类型系统实现
 - 探索Kani证明与状态空间验证的集成
 - 设计状态空间Agent的核心数据结构 (使用Typestate + Kani contracts)
 - 研究"状态空间DSL"到Rust类型系统的编译器
+- 完善工具设计原型，添加更多实际工具案例
 
 ### 2026-03-09 初始化
 - 创建方向文档
