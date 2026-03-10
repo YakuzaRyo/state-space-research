@@ -174,6 +174,34 @@
 - [ ] 等待首次执行...
 
 
+### 2026-03-10 20:30 工具设计深度研究 - 类型安全的CLI工具框架
+- [x] 研究方向：10_tool_design - 工具设计：无缺陷工具集
+- [x] 核心问题：如何设计'无法产生错误'的工具？
+- [x] 研究时长：~30分钟（使用SubAgent深度研究）
+- [x] 关键发现：
+  - 全函数式编程：Agda依赖类型、Idris Totality、Elm无运行时异常
+  - 确定性构建：Nix（纯函数式包管理）、Bazel（Hermetic Builds）
+  - Typestate模式：Clifle博客、Stanford CS242讲义
+  - FC-IS架构：Functional Core, Imperative Shell模式
+  - Rust CLI最佳实践：PeerDH错误处理、分层配置设计
+- [x] 代码实现：
+  - `drafts/20260310_2030_tool_design.rs` (540行)
+  - ConfigBuilder: L3 Typestate状态机 (Unparsed→Parsed→Merged→Validated→Ready)
+  - BoundedConfig: L0 Const Generics (ThreadPoolSize, BufferSize)
+  - CliInput/EnvInput/FileInput: L1 Newtype区分输入来源
+  - SecureFileHandle: L4+L5权限系统 (CanRead→CanWrite→CanExecute)
+  - core/shell模块: Functional Core, Imperative Shell架构
+- [x] 架构洞察：
+  - 六层边界在CLI中的完整映射表
+  - 失败快速: 在ConfigBuilder阶段验证，而非运行时
+  - 渐进式披露: 分层配置（CLI > Env > File > Default）
+  - Effect trait: 抽象所有副作用，便于测试
+- [x] 关键资源：Nix、Bazel、Stillwater、ripgrep/fd/bat、Idris、Elm
+- [x] 新假设：
+  - Typestate模式在大型CLI项目中不会导致类型爆炸
+  - FC-IS在Rust CLI中的性能开销可忽略
+  - 六层边界可以系统化应用到任何CLI工具设计
+
 ### 2026-03-10 18:15 Rust类型系统深度研究 - L4形式验证层
 - [x] 研究方向：09_rust_type_system - 实现技术：Rust类型系统
 - [x] 核心问题：如何用Rust类型系统实现状态空间？
