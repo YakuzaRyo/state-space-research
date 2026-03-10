@@ -15,9 +15,13 @@
 1. 阅读 state-space-research/RESEARCH_AGENT.md 了解任务要求
 2. 根据当前时间确定研究方向
 3. 阅读对应的研究方向文档
-4. 进行深度研究和分析
+4. 使用 SubAgent 进行深度研究（Agent工具 + subagent_type="Explore"）
 5. 更新研究文档和代码
-6. 提交到GitHub
+6. 提交到GitHub的kimi-research分支
+
+重要提示：
+- 深度研究阶段必须使用 Agent 工具创建子代理执行
+- 所有提交必须推送到 kimi-research 分支，而非 master
 ```
 
 ## 设置方法
@@ -31,7 +35,7 @@
   "schedule": "0 */2 * * *",
   "action": "sessions_spawn",
   "params": {
-    "task": "请阅读工作区中的state-space-research/RESEARCH_AGENT.md文件，按照其中的指令执行状态空间架构研究任务。完成后将研究成果提交到GitHub。",
+    "task": "请阅读工作区中的state-space-research/RESEARCH_AGENT.md文件，按照其中的指令执行状态空间架构研究任务。重要：1) 深度研究阶段必须使用Agent工具创建子代理执行；2) 完成后将研究成果提交到kimi-research分支。",
     "mode": "run",
     "thinking": "high",
     "timeoutSeconds": 1800,
@@ -71,8 +75,9 @@ sessions_spawn(
 - 🌞 下午/晚上: 14:45, 15:45, 16:45, 17:45, 18:45, 19:45, 20:45, 21:45, 22:45, 23:45
 
 ## Git工作流
-- **master分支**: 每次研究后推送
-- **stable分支**: 每日23:45同步
+- **kimi-research分支**: 每次研究后推送（开发分支）
+- **master分支**: 稳定版本，从kimi-research合并
+- **stable分支**: 每日23:45归档同步
 - **标签**: daily-YYYY-MM-DD 每日报告
 
 ## 监控与日志
