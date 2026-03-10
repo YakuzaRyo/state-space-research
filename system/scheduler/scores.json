@@ -48,13 +48,29 @@
       "duration_seconds": 1560,
       "score": 1,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-10T21:15:00",
+      "task_id": "a5f8d2e9b1c3a7f4e",
+      "direction": "类型约束生成",
+      "duration_seconds": 2220,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-10T21:15:00",
+      "task_id": "a9c4b7d3e8f1a2b6c",
+      "direction": "工程路线图规划",
+      "duration_seconds": 2100,
+      "score": 1,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 6,
-    "excellent": 6,
+    "total_runs": 8,
+    "excellent": 8,
     "acceptable": 0,
     "insufficient": 0,
-    "total_duration_seconds": 10680
+    "total_duration_seconds": 15000
   }
 }
