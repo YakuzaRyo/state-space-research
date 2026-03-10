@@ -1,0 +1,33 @@
+# Claude Code 配置（不包含在版本控制中）
+.claude/
+!.claude/skills/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Node
+node_modules/
+npm-debug.log*
