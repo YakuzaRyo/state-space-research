@@ -174,6 +174,31 @@
 - [ ] 等待首次执行...
 
 
+### 2026-03-10 16:15 LLM导航器深度研究 - 从生成器到导航器
+- [x] 研究方向：08_llm_as_navigator - LLM角色：从生成器到导航器
+- [x] 核心问题：LLM作为启发式函数的理论基础？
+- [x] 研究时长：~30分钟（使用SubAgent深度研究）
+- [x] 关键发现：
+  - Tree of Thoughts (ToT): Game of 24成功率4%→74%
+  - ReAct: 推理-行动循环，多领域应用验证
+  - LATS: MCTS统一推理、行动和规划
+  - LLM-A*: A*精确路径规划 + LLM全局推理
+- [x] 代码实现：
+  - `drafts/20260310_1615_llm_navigator.rs` (542行)
+  - LLMHeuristic trait、SimulatedLLMHeuristic、VotingLLMHeuristic
+  - LLMStarSearch (A* + LLM启发式)
+  - TreeOfThoughts (BFS/DFS搜索思维树)
+  - PatternNavigator (与L2 Pattern层集成)
+- [x] 架构洞察：
+  - LLM导航 vs 生成对比表（正确性、错误处理、解释性等）
+  - LLM启发式的特殊性：概率性、上下文依赖、非静态
+  - ToT需要5-100倍token，但正确性大幅提升
+- [x] 关键资源：ToT、ReAct、LATS、LLM-A*、MCTS-DPO、ToolFormer
+- [x] 新假设：
+  - 假设1: LLM启发式的相对排序比绝对值更可靠
+  - 假设2: 类型约束状态空间中LLM导航效率显著提升
+  - 假设3: MCTS比BFS/DFS更适合LLM启发式
+
 ### 2026-03-10 14:30 分层设计深度研究 - L2 Pattern层
 - [x] 研究方向：07_layered_design - 分层设计：四层确定性三明治架构
 - [x] 核心问题：Syntax→Semantic→Pattern→Domain 如何转换？
