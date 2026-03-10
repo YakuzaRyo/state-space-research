@@ -8,6 +8,12 @@
 
 ## 研究历程
 
+### 2026-03-10 12:00 深度研究
+- 搜索相关学术论文和开源项目
+- 研究类型系统与形式化验证的交叉领域
+- 分析 Verus (Rust 形式验证) 的设计理念
+- 提炼"硬性边界"的工程实现方法
+
 ### 2026-03-09 初始化
 - 创建方向文档
 - 待研究...
@@ -15,10 +21,28 @@
 ## 关键资源
 
 ### 论文
-- 待补充...
+- **VeriGuard: Enhancing LLM Agent Safety via Verified Code Generation** (2025)
+  - 核心：将形式化验证与LLM代码生成结合
+  - URL: https://arxiv.org/abs/2510.01482
+  - 关键洞察：在代码生成过程中嵌入验证层
+  
+- **Imandra CodeLogician: Neuro-Symbolic Reasoning for Precise Analysis of Software Logic** (2026)
+  - 核心：神经符号推理与精确软件逻辑分析结合
+  - URL: https://arxiv.org/abs/2401.09153
+  - 关键洞察：弥补LLM在精确数学推理方面的不足
 
 ### 开源项目
-- 待补充...
+- **Verus** - Rust 形式验证工具
+  - URL: https://github.com/verus-lang/verus
+  - 核心特性：
+    - 静态验证Rust代码正确性
+    - 使用SMT求解器证明规约满足
+    - 支持自定义不变量和断言检查
+  - 关键洞察：编译期排除无效状态，与"硬性边界"理念高度一致
+
+- **hacspec** - 可执行规约语言
+  - 目标：密码学协议的形式化验证
+  - 特点：从规约到实现的可信链
 
 ### 技术博客
 - 待补充...
