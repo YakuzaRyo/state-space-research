@@ -590,6 +590,77 @@ pub struct ExperimentRunner {
     pub config: ExperimentConfig,
     pub tasks: Vec<Task>,
     pub collectors: HashMap<ExperimentGroup, ResultsCollector>,
+    pub latin_square_design: LatinSquareDesign,
+}
+
+/// Latin Square设计 (用于控制顺序效应)
+#[derive(Debug, Clone)]
+pub struct LatinSquareDesign {
+    pub treatments: Vec<ExperimentGroup>,
+    pub periods: usize,
+    pub sequences: Vec<Vec<ExperimentGroup>>,
+}
+
+impl LatinSquareDesign {
+    /// 创建3x3 Latin Square
+    /// 用于三组交叉设计，平衡处理顺序
+    pub fn new_3x3() -> Self {
+        let treatments = vec![
+            ExperimentGroup::SoftConstraint,
+            ExperimentGroup::HardBoundary,
+            ExperimentGroup::Hybrid,
+        ];
+
+        // 3x3 Latin Square (标准形式)
+        let sequences = vec![
+            vec![
+                ExperimentGroup::SoftConstraint,
+                ExperimentGroup::HardBoundary,
+                ExperimentGroup::Hybrid,
+            ],
+            vec![
+                ExperimentGroup::HardBoundary,
+                ExperimentGroup::Hybrid,
+                ExperimentGroup::SoftConstraint,
+            ],
+            vec![
+                ExperimentGroup::Hybrid,
+                ExperimentGroup::SoftConstraint,
+                ExperimentGroup::HardBoundary,
+            ],
+        ];
+
+        Self {
+            treatments,
+            periods: 3,
+            sequences,
+        }
+    }
+
+    /// 获取参与者的处理顺序
+    pub fn get_sequence_for_participant(
+        &self,
+        participant_id: usize,
+    ) -> &Vec<ExperimentGroup> {
+        &self.sequences[participant_id % self.sequences.len()]
+    }
+}
+
+/// 清洗期配置 (Washout Period)
+#[derive(Debug, Clone)]
+pub struct WashoutConfig {
+    /// 清洗期持续时间
+    pub duration: Duration,
+    /// 清洗期活动 (如: 不相关任务、休息)
+    pub activity: WashoutActivity,
+}
+
+#[derive(Debug, Clone)]
+pub enum WashoutActivity {
+    Rest,           // 休息
+    UnrelatedTask,  // 不相关任务
+    Survey,         // 填写问卷
+    Tutorial,       // 学习教程
 }
 
 impl ExperimentRunner {
@@ -603,40 +674,157 @@ impl ExperimentRunner {
             config,
             tasks,
             collectors,
+            latin_square_design: LatinSquareDesign::new_3x3(),
         }
     }
 
     /// 运行完整实验
     pub fn run_experiment(&mut self) -> ExperimentReport {
-        // 1. 随机分配任务到各组
-        // 2. 执行每个任务
+        // 1. 使用Latin Square随机分配处理顺序
+        // 2. 执行每个任务 (考虑清洗期)
         // 3. 收集结果
-        // 4. 统计分析
+        // 4. 统计分析 (考虑顺序效应)
         todo!("Implement full experiment execution")
     }
 
     /// 生成任务集 (基于HumanEval/MBPP/SWE-Bench)
-    pub fn generate_task_set(&self) -> Vec<Task> {
-        // 包含不同复杂度等级的任务
-        vec![
-            // 简单任务 (HumanEval级别)
-            Task {
-                id: "HE_001".to_string(),
-                name: "has_close_elements".to_string(),
-                description: "Check if any two numbers in list are within threshold".to_string(),
+    /// 使用分层抽样确保任务分布
+    pub fn generate_stratified_task_set(&self) -> Vec<Task> {
+        let mut tasks = Vec::new();
+
+        // 简单任务 40% (HumanEval级别)
+        let simple_tasks = self.generate_simple_tasks(40);
+        tasks.extend(simple_tasks);
+
+        // 中等任务 35% (MBPP级别)
+        let medium_tasks = self.generate_medium_tasks(35);
+        tasks.extend(medium_tasks);
+
+        // 复杂任务 20% (SWE-Bench Lite级别)
+        let complex_tasks = self.generate_complex_tasks(20);
+        tasks.extend(complex_tasks);
+
+        // 极复杂任务 5% (SWE-Bench Verified级别)
+        let very_complex_tasks = self.generate_very_complex_tasks(5);
+        tasks.extend(very_complex_tasks);
+
+        // 随机打乱任务顺序
+        use rand::seq::SliceRandom;
+        let mut rng = rand::thread_rng();
+        tasks.shuffle(&mut rng);
+
+        tasks
+    }
+
+    fn generate_simple_tasks(&self, count: usize) -> Vec<Task> {
+        (0..count)
+            .map(|i| Task {
+                id: format!("SIMPLE_{:03}", i),
+                name: format!("Simple Task {}", i),
+                description: "Entry-level programming problem from HumanEval".to_string(),
                 task_type: TaskType::CodeGeneration,
                 complexity: TaskComplexity::Simple,
-                prompt: "...".to_string(),
+                prompt: String::new(),
                 test_cases: vec![],
                 expected_output_schema: Some(TypeSchema {
-                    input_types: vec!["List[float]".to_string(), "float".to_string()],
-                    output_type: "bool".to_string(),
-                    constraints: vec![],
+                    input_types: vec!["List[int]".to_string()],
+                    output_type: "int".to_string(),
+                    constraints: vec!["non-negative".to_string()],
                 }),
                 time_limit: Duration::from_secs(300),
-            },
-            // 更多任务...
-        ]
+            })
+            .collect()
+    }
+
+    fn generate_medium_tasks(&self, count: usize) -> Vec<Task> {
+        (0..count)
+            .map(|i| Task {
+                id: format!("MEDIUM_{:03}", i),
+                name: format!("Medium Task {}", i),
+                description: "Intermediate programming problem from MBPP".to_string(),
+                task_type: TaskType::CodeGeneration,
+                complexity: TaskComplexity::Medium,
+                prompt: String::new(),
+                test_cases: vec![],
+                expected_output_schema: Some(TypeSchema {
+                    input_types: vec!["Dict[str, Any]".to_string()],
+                    output_type: "List[Tuple[str, Any]]".to_string(),
+                    constraints: vec!["sorted".to_string()],
+                }),
+                time_limit: Duration::from_secs(600),
+            })
+            .collect()
+    }
+
+    fn generate_complex_tasks(&self, count: usize) -> Vec<Task> {
+        (0..count)
+            .map(|i| Task {
+                id: format!("COMPLEX_{:03}", i),
+                name: format!("Complex Task {}", i),
+                description: "Complex bug fix from SWE-Bench Lite".to_string(),
+                task_type: TaskType::CodeRepair,
+                complexity: TaskComplexity::Complex,
+                prompt: String::new(),
+                test_cases: vec![],
+                expected_output_schema: None,
+                time_limit: Duration::from_secs(1800),
+            })
+            .collect()
+    }
+
+    fn generate_very_complex_tasks(&self, count: usize) -> Vec<Task> {
+        (0..count)
+            .map(|i| Task {
+                id: format!("VERY_COMPLEX_{:03}", i),
+                name: format!("Very Complex Task {}", i),
+                description: "Production-level task from SWE-Bench Verified".to_string(),
+                task_type: TaskType::CodeRepair,
+                complexity: TaskComplexity::VeryComplex,
+                prompt: String::new(),
+                test_cases: vec![],
+                expected_output_schema: None,
+                time_limit: Duration::from_secs(3600),
+            })
+            .collect()
+    }
+
+    /// 计算所需样本量 (基于功效分析)
+    pub fn calculate_required_sample_size(&self) -> usize {
+        statistical_best_practices::power_analysis_sample_size(
+            self.config.min_effect_size,
+            self.config.significance_level,
+            self.config.desired_power,
+        )
+    }
+
+    /// 检查实验可行性
+    pub fn validate_experiment_design(&self) -> Result<(), Vec<String>> {
+        let mut errors = Vec::new();
+
+        // 检查样本量
+        let required_n = self.calculate_required_sample_size();
+        if self.config.participants_per_group < required_n {
+            errors.push(format!(
+                "样本量不足: 需要 {} 人/组, 当前 {} 人/组",
+                required_n, self.config.participants_per_group
+            ));
+        }
+
+        // 检查任务数量
+        let total_tasks = self.tasks.len();
+        let expected_tasks = self.config.tasks_per_group * self.config.groups.len();
+        if total_tasks < expected_tasks {
+            errors.push(format!(
+                "任务数量不足: 需要 {} 个任务, 当前 {} 个任务",
+                expected_tasks, total_tasks
+            ));
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }
 
