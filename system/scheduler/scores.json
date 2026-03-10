@@ -1,5 +1,5 @@
 {
-  "total_score": 4,
+  "total_score": 6,
   "runs": [
     {
       "timestamp": "2026-03-10T09:13:00",
@@ -7,8 +7,7 @@
       "direction": "LLM导航器深度研究",
       "duration_seconds": 2400,
       "score": 1,
-      "level": "EXCELLENT",
-      "percentage": 160.0
+      "level": "EXCELLENT"
     },
     {
       "timestamp": "2026-03-10T17:09:00",
@@ -16,8 +15,7 @@
       "direction": "分层架构设计",
       "duration_seconds": 1620,
       "score": 1,
-      "level": "EXCELLENT",
-      "percentage": 108.0
+      "level": "EXCELLENT"
     },
     {
       "timestamp": "2026-03-10T20:00:00",
@@ -25,8 +23,7 @@
       "direction": "工程路线图规划",
       "duration_seconds": 2100,
       "score": 1,
-      "level": "EXCELLENT",
-      "percentage": 140.0
+      "level": "EXCELLENT"
     },
     {
       "timestamp": "2026-03-10T21:06:00",
@@ -34,14 +31,30 @@
       "direction": "Rust类型系统",
       "duration_seconds": 1500,
       "score": 1,
-      "level": "EXCELLENT",
-      "percentage": 100.0
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-10T21:06:00",
+      "task_id": "a09eb160c453f173d",
+      "direction": "结构化生成",
+      "duration_seconds": 1500,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-10T21:07:00",
+      "task_id": "a173fdbca3c690792",
+      "direction": "LLM导航器",
+      "duration_seconds": 1560,
+      "score": 1,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 4,
-    "above_25_min": 4,
-    "below_20_min": 0,
-    "avg_duration_seconds": 1905
+    "total_runs": 6,
+    "excellent": 6,
+    "acceptable": 0,
+    "insufficient": 0,
+    "total_duration_seconds": 10680
   }
 }
