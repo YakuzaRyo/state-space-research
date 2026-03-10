@@ -691,6 +691,462 @@ pub const MBPP_TASK_COUNT: usize = 974;
 /// SWE-Bench任务集 (2294个任务)
 pub const SWE_BENCH_TASK_COUNT: usize = 2294;
 
+/// 基于Anthropic统计方法的最佳实践
+pub mod statistical_best_practices {
+    //! 统计方法最佳实践 (基于Anthropic研究 "A statistical approach to model evaluations")
+    //!
+    //! 核心推荐:
+    //! 1. 使用中心极限定理计算SEM和95%置信区间
+    //! 2. 聚类标准误 (对于相关问题组)
+    //! 3. 减少问题内方差 (重采样或直接使用token概率)
+    //! 4. 配对差异分析 (消除问题难度方差)
+    //! 5. 功效分析 (确定所需样本量)
+
+    use super::*;
+
+    /// 计算标准误 (SEM)
+    /// SEM = σ / √n
+    pub fn standard_error(data: &[f64]) -> f64 {
+        let n = data.len() as f64;
+        let std = data.std_dev();
+        std / n.sqrt()
+    }
+
+    /// 计算95%置信区间
+    /// CI = M ± 1.96 * SEM
+    pub fn confidence_interval_95(data: &[f64]) -> (f64, f64) {
+        let mean = data.mean();
+        let sem = standard_error(data);
+        let margin = 1.96 * sem;
+        (mean - margin, mean + margin)
+    }
+
+    /// 聚类标准误计算
+    /// 适用于相关问题组 (如SWE-Bench的同一仓库多个问题)
+    pub fn clustered_standard_error(
+        cluster_means: &[f64],
+        cluster_sizes: &[usize],
+    ) -> f64 {
+        let n_clusters = cluster_means.len() as f64;
+        let overall_mean = cluster_means.mean();
+
+        // 组间方差
+        let between_variance: f64 = cluster_means
+            .iter()
+            .zip(cluster_sizes.iter())
+            .map(|(mean, size)| {
+                let diff = mean - overall_mean;
+                diff.powi(2) * (*size as f64)
+            })
+            .sum();
+
+        (between_variance / n_clusters).sqrt()
+    }
+
+    /// 配对差异检验
+    /// 用于比较两个模型在同一组问题上的表现
+    pub fn paired_difference_test(
+        model_a_scores: &[f64],
+        model_b_scores: &[f64],
+    ) -> PairedTestResult {
+        assert_eq!(model_a_scores.len(), model_b_scores.len());
+
+        let differences: Vec<f64> = model_a_scores
+            .iter()
+            .zip(model_b_scores.iter())
+            .map(|(a, b)| a - b)
+            .collect();
+
+        let mean_diff = differences.mean();
+        let std_diff = differences.std_dev();
+        let n = differences.len() as f64;
+
+        // t统计量
+        let t_stat = mean_diff / (std_diff / n.sqrt());
+
+        // 效应量 (Cohen's d for paired samples)
+        let cohens_d = mean_diff / std_diff;
+
+        // Pearson相关系数
+        let correlation = pearson_correlation(model_a_scores, model_b_scores);
+
+        PairedTestResult {
+            mean_difference: mean_diff,
+            t_statistic: t_stat,
+            cohens_d,
+            correlation,
+            n: n as usize,
+        }
+    }
+
+    /// Pearson相关系数
+    fn pearson_correlation(x: &[f64], y: &[f64]) -> f64 {
+        let n = x.len() as f64;
+        let mean_x = x.mean();
+        let mean_y = y.mean();
+
+        let numerator: f64 = x.iter()
+            .zip(y.iter())
+            .map(|(xi, yi)| (xi - mean_x) * (yi - mean_y))
+            .sum();
+
+        let sum_sq_x: f64 = x.iter().map(|xi| (xi - mean_x).powi(2)).sum();
+        let sum_sq_y: f64 = y.iter().map(|yi| (yi - mean_y).powi(2)).sum();
+
+        numerator / (sum_sq_x.sqrt() * sum_sq_y.sqrt())
+    }
+
+    /// 功效分析: 计算所需样本量
+    /// 基于期望效应量、显著性水平和功效
+    pub fn power_analysis_sample_size(
+        effect_size: f64,  // Cohen's d
+        alpha: f64,        // 显著性水平 (通常0.05)
+        power: f64,        // 期望功效 (通常0.80)
+    ) -> usize {
+        // z值
+        let z_alpha = match alpha {
+            0.10 => 1.645,
+            0.05 => 1.96,
+            0.01 => 2.576,
+            _ => 1.96,
+        };
+
+        let z_power = match power {
+            0.80 => 0.84,
+            0.90 => 1.28,
+            0.95 => 1.645,
+            _ => 0.84,
+        };
+
+        // 每组所需样本量
+        let n = 2.0 * ((z_alpha + z_power) / effect_size).powi(2);
+        n.ceil() as usize
+    }
+
+    /// 配对检验结果
+    #[derive(Debug, Clone)]
+    pub struct PairedTestResult {
+        pub mean_difference: f64,
+        pub t_statistic: f64,
+        pub cohens_d: f64,
+        pub correlation: f64,
+        pub n: usize,
+    }
+
+    /// 多重比较校正: Bonferroni方法
+    pub fn bonferroni_correction(alpha: f64, num_comparisons: usize) -> f64 {
+        alpha / num_comparisons as f64
+    }
+
+    /// 效应量解释
+    pub fn interpret_effect_size(cohens_d: f64) -> &'static str {
+        let abs_d = cohens_d.abs();
+        if abs_d < 0.2 {
+            "可忽略 (Negligible)"
+        } else if abs_d < 0.5 {
+            "小效应 (Small)"
+        } else if abs_d < 0.8 {
+            "中等效应 (Medium)"
+        } else {
+            "大效应 (Large)"
+        }
+    }
+}
+
+/// XGrammar风格约束解码实现参考
+pub mod xgrammar_integration {
+    //! XGrammar集成参考
+    //!
+    //! XGrammar核心概念:
+    //! 1. 上下文无关文法 (CFG) 用于结构化生成
+    //! 2. 词汇表分区: 上下文无关token vs 上下文相关token
+    //! 3. 持久化栈结构加速运行时检查
+    //! 4. 与LLM推理引擎协同设计
+
+    use super::*;
+
+    /// 上下文无关文法规则
+    #[derive(Debug, Clone)]
+    pub struct GrammarRule {
+        pub non_terminal: String,
+        pub production: Vec<String>,
+    }
+
+    /// 类型约束文法 (用于代码生成)
+    pub struct TypeConstrainedGrammar {
+        pub rules: Vec<GrammarRule>,
+        pub start_symbol: String,
+        pub type_constraints: TypeSchema,
+    }
+
+    /// 词汇表分区结果
+    pub struct VocabularyPartition {
+        /// 上下文无关token (可预检查)
+        pub context_independent: Vec<usize>,
+        /// 上下文相关token (需运行时检查)
+        pub context_dependent: Vec<usize>,
+    }
+
+    impl TypeConstrainedGrammar {
+        /// 分区词汇表 (XGrammar核心优化)
+        pub fn partition_vocabulary(&self, vocabulary: &[String]) -> VocabularyPartition {
+            let mut context_independent = Vec::new();
+            let mut context_dependent = Vec::new();
+
+            for (idx, token) in vocabulary.iter().enumerate() {
+                if self.is_context_independent(token) {
+                    context_independent.push(idx);
+                } else {
+                    context_dependent.push(idx);
+                }
+            }
+
+            VocabularyPartition {
+                context_independent,
+                context_dependent,
+            }
+        }
+
+        /// 判断token是否上下文无关
+        fn is_context_independent(&self, token: &str) -> bool {
+            // 关键字、基本类型通常是上下文无关的
+            let context_independent_tokens = [
+                "def", "class", "if", "else", "for", "while", "return",
+                "int", "str", "bool", "float", "None", "True", "False",
+            ];
+            context_independent_tokens.contains(&token)
+        }
+    }
+
+    /// 约束解码引擎接口
+    pub trait ConstrainedDecoder {
+        /// 根据当前状态和文法，获取允许的下一个token
+        fn get_allowed_tokens(&self, current_state: &DecoderState) -> Vec<usize>;
+
+        /// 更新解码器状态
+        fn update_state(&mut self, token: usize);
+
+        /// 检查是否完成
+        fn is_complete(&self) -> bool;
+    }
+
+    /// 解码器状态
+    #[derive(Debug, Clone)]
+    pub struct DecoderState {
+        pub stack: Vec<String>,
+        pub generated_tokens: Vec<usize>,
+        pub current_type: Option<String>,
+    }
+}
+
+/// Praetorian风格确定性编排参考
+pub mod praetorian_orchestration {
+    //! Praetorian确定性编排架构参考
+    //!
+    //! 核心原则:
+    //! 1. Thin Agent (<150行) + Fat Platform
+    //! 2. 8层防御深度
+    //! 3. 三层循环系统
+    //! 4. 工具限制边界 (物理约束)
+
+    use super::*;
+
+    /// Agent定义 (Thin Agent规范)
+    #[derive(Debug, Clone)]
+    pub struct Agent {
+        pub id: String,
+        pub name: String,
+        pub description: String,
+        pub line_count: usize,  // 必须 < 150
+        pub allowed_tools: Vec<Tool>,
+        pub forbidden_tools: Vec<Tool>,
+    }
+
+    impl Agent {
+        /// 验证Agent符合Thin Agent规范
+        pub fn validate(&self) -> Result<(), String> {
+            if self.line_count > 150 {
+                return Err(format!(
+                    "Agent {} exceeds 150 line limit: {}",
+                    self.name, self.line_count
+                ));
+            }
+            Ok(())
+        }
+    }
+
+    /// 工具定义
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum Tool {
+        Task,       // 委派任务
+        TodoWrite,  // 写待办
+        Read,       // 读取文件
+        Edit,       // 编辑文件
+        Write,      // 写入文件
+        Bash,       // 执行命令
+    }
+
+    /// 角色类型 (工具限制边界)
+    #[derive(Debug, Clone)]
+    pub enum Role {
+        /// Orchestrator: 有Task/TodoWrite/Read，无Edit/Write
+        Orchestrator,
+        /// Worker: 有Edit/Write/Bash，无Task
+        Worker,
+    }
+
+    impl Role {
+        /// 获取允许的工具
+        pub fn allowed_tools(&self) -> Vec<Tool> {
+            match self {
+                Role::Orchestrator => vec![
+                    Tool::Task,
+                    Tool::TodoWrite,
+                    Tool::Read,
+                ],
+                Role::Worker => vec![
+                    Tool::Edit,
+                    Tool::Write,
+                    Tool::Bash,
+                    Tool::Read,
+                ],
+            }
+        }
+
+        /// 检查是否有权限使用工具
+        pub fn can_use(&self, tool: &Tool) -> bool {
+            self.allowed_tools().contains(tool)
+        }
+    }
+
+    /// Hook类型 (8层防御)
+    #[derive(Debug, Clone)]
+    pub enum Hook {
+        /// L4: UserPromptSubmit - 提示注入
+        UserPromptSubmit,
+        /// L5: PreToolUse - 动作前阻断
+        PreToolUse,
+        /// L6: PostToolUse - 结果验证
+        PostToolUse,
+        /// L7: SubagentStop - 退出拦截
+        SubagentStop,
+        /// L8: Stop - 最终质量门
+        Stop,
+    }
+
+    /// 编排状态机 (16阶段模板)
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum OrchestrationPhase {
+        Setup,                // 1. 设置
+        Triage,               // 2. 分类
+        CodebaseDiscovery,    // 3. 代码库发现
+        SkillDiscovery,       // 4. 技能发现
+        Complexity,           // 5. 复杂度评估
+        Brainstorming,        // 6. 头脑风暴
+        ArchitectingPlan,     // 7. 架构规划
+        Implementation,       // 8. 实现
+        DesignVerification,   // 9. 设计验证
+        DomainCompliance,     // 10. 领域合规
+        CodeQuality,          // 11. 代码质量
+        TestPlanning,         // 12. 测试规划
+        Testing,              // 13. 测试
+        CoverageVerification, // 14. 覆盖率验证
+        TestQuality,          // 15. 测试质量
+        Completion,           // 16. 完成
+    }
+
+    /// 工作流编排器
+    pub struct WorkflowOrchestrator {
+        pub current_phase: OrchestrationPhase,
+        pub manifest: Manifest,
+        pub context_usage: f64,  // 0.0 - 1.0
+    }
+
+    /// 工作流清单 (持久化状态)
+    #[derive(Debug, Clone)]
+    pub struct Manifest {
+        pub feature_id: String,
+        pub current_phase: OrchestrationPhase,
+        pub active_agents: Vec<String>,
+        pub validation_status: ValidationStatus,
+    }
+
+    #[derive(Debug, Clone)]
+    pub enum ValidationStatus {
+        Pending,
+        InProgress,
+        Passed,
+        Failed,
+    }
+
+    impl WorkflowOrchestrator {
+        /// 检查上下文压缩门限
+        pub fn check_compaction_gate(&self) -> CompactionDecision {
+            match self.context_usage {
+                x if x < 0.75 => CompactionDecision::Proceed,
+                x if x < 0.85 => CompactionDecision::Warning,
+                _ => CompactionDecision::HardBlock,
+            }
+        }
+
+        /// 智能阶段跳过
+        pub fn should_skip_phase(&self, work_type: WorkType) -> bool {
+            use WorkType::*;
+            use OrchestrationPhase::*;
+
+            match (work_type, &self.current_phase) {
+                (BugFix, Complexity) |
+                (BugFix, Brainstorming) |
+                (BugFix, ArchitectingPlan) |
+                (BugFix, DesignVerification) |
+                (BugFix, TestPlanning) => true,
+                (Small, Complexity) |
+                (Small, Brainstorming) |
+                (Small, ArchitectingPlan) |
+                (Small, DesignVerification) => true,
+                _ => false,
+            }
+        }
+    }
+
+    /// 压缩决策
+    #[derive(Debug, Clone)]
+    pub enum CompactionDecision {
+        Proceed,
+        Warning,
+        HardBlock,
+    }
+
+    /// 工作类型
+    #[derive(Debug, Clone)]
+    pub enum WorkType {
+        BugFix,      // Bug修复
+        Small,       // 小改动 (<100行)
+        Medium,      // 中等改动
+        Large,       // 大改动 (新子系统)
+    }
+
+    /// 反馈循环状态 (运行时状态)
+    #[derive(Debug, Clone)]
+    pub struct FeedbackLoopState {
+        pub dirty_bit: bool,           // 代码是否被修改
+        pub tests_passed: bool,        // 测试是否通过
+        pub review_passed: bool,       // 审查是否通过
+        pub iteration_count: u32,      // 迭代次数
+    }
+
+    impl FeedbackLoopState {
+        /// 检查是否可以退出
+        pub fn can_exit(&self) -> bool {
+            if !self.dirty_bit {
+                return true;  // 没有修改，可以退出
+            }
+            // 有修改时，必须通过测试和审查
+            self.tests_passed && self.review_passed
+        }
+    }
+}
+
 /// 创建分层任务集
 pub fn create_stratified_task_set() -> Vec<Task> {
     let mut tasks = Vec::new();
