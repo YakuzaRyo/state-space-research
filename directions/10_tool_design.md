@@ -387,3 +387,147 @@
 1. 设计状态空间工具的形式化规格语言
 2. 实现Kani验证的自动化测试框架
 3. 研究与Refine4LLM的集成方案
+
+---
+
+### 2026-03-10 21:12 深度研究（工具组合与事务性）
+
+**核心问题**: 当多个工具组合使用时，如何保证原子性和一致性?
+
+**研究发现**:
+
+1. **现有AI工具的组合问题**:
+   - Claude Code / OpenCode: 工具调用是独立的，依赖LLM理解操作顺序
+   - 没有内置的事务机制：如果中间步骤失败，可能留下不一致状态
+   - 例如：写入文件A成功，写入文件B失败 → 需要手动回滚
+   - **核心缺陷**: 缺乏"全部成功或全部失败"的保证
+
+2. **状态空间架构的工具组合模型**:
+   ```
+   传统方式:                          状态空间:
+   ┌──────┐  ┌──────┐  ┌──────┐    ┌─────────────────────┐
+   │Tool A│→ │Tool B│→ │Tool C│    │ ToolChain<A, B, C>  │
+   └──────┘  └──────┘  └──────┘    │  - 类型安全组合      │
+        ↓       ↓       ↓           │  - 事务性保证        │
+   [成功]   [失败]   [未执行]       │  - 回滚自动化        │
+   需要手动回滚                  └─────────────────────┘
+   ```
+
+3. **Rust类型系统实现工具组合**:
+   ```rust
+   // 工具链类型 - 编译期保证组合安全性
+   pub struct ToolChain<First, Second> { ... }
+   
+   // 组合操作符
+   impl<First: Tool, Second: Tool> Compose for ToolChain<First, Second> 
+   where First::Output: InputFor<Second>
+   {
+       fn execute(&self, input: First::Input) -> TransactionResult<First::Output, Second::Output> {
+           // 1. 执行第一个工具
+           let first_result = self.first.execute(input);
+           
+           // 2. 检查结果，决定是否继续
+           match first_result {
+               Ok(output) => {
+                   // 3. 转换为第二个工具的输入
+                   let second_input = transform(output);
+                   // 4. 执行第二个工具
+                   self.second.execute(second_input)
+               }
+               Err(e) => TransactionResult::Rollback(e)
+           }
+       }
+   }
+   
+   // 事务结果类型
+   pub enum TransactionResult<A, B> {
+       Complete(Ok(B)),
+       Partial(Ok<A>, Err),    // 第一个成功，第二个失败
+       RolledBack(Err)         // 第一个失败，已回滚
+   }
+   ```
+
+4. **工具组合的类型约束**:
+   ```rust
+   // 输出类型必须匹配输入类型
+   pub trait InputFor<Next: Tool> {
+       type Output;
+   }
+   
+   // 文件读取 → 文件写入 (类型匹配)
+   impl InputFor<WriteFileTool> for ReadFileOutput {
+       type Output = WriteFileInput;
+   }
+   
+   // 编译 → 测试 (类型不匹配，编译期错误)
+   // impl InputFor<TestTool> for ReadFileOutput { ... } // 编译失败！
+   ```
+
+5. **回滚机制的类型安全实现**:
+   ```rust
+   // 可回滚操作 trait
+   trait Rollbackable {
+       type RollbackAction;
+       fn rollback(self) -> Self::RollbackAction;
+   }
+   
+   // 文件写入的回滚：删除文件
+   impl Rollbackable for FileWriteAction {
+       fn rollback(self) -> FileDeleteAction {
+           FileDeleteAction { path: self.path }
+       }
+   }
+   
+   // 事务执行器保证回滚
+   fn execute_with_rollback<T: Rollbackable>(tool: T) -> Result<T::Output, T::RollbackAction> {
+       let result = tool.execute();
+       if result.is_err() {
+           // 自动回滚
+           tool.rollback();
+       }
+       result
+   }
+   ```
+
+6. **与现有方案的根本区别**:
+   | 特性 | Claude Code | 状态空间架构 |
+   |------|------------|-------------|
+   | 组合方式 | LLM决定调用顺序 | 类型系统约束组合 |
+   | 事务性 | 无 | 编译期保证 |
+   | 回滚 | 手动/无 | 自动类型安全 |
+   | 错误传播 | 依赖LLM理解 | 类型系统强制 |
+   | 可组合性验证 | 运行时发现 | 编译期报错 |
+
+7. **工具组合的实际价值**:
+   - **代码重构场景**: 读取文件 → 分析 → 写入新文件 → 删除旧文件
+   - **批量操作场景**: 批量读取 → 批量处理 → 批量写入
+   - **测试场景**: 编译 → 运行测试 → 收集结果 → 报告
+   - 所有这些场景都需要原子性保证
+
+**架构洞察**:
+- **组合安全 = 类型安全**: 工具组合的可组合性在编译期验证
+- **事务性是默认值**: 不是"可选特性"，而是"设计原则"
+- **回滚即类型**: 回滚操作也是类型系统的一部分
+- **渐进式复杂性**: 简单任务用简单工具链，复杂任务用事务性工具链
+
+**新增核心资源**:
+- Rust类型系统组合理论
+- 函数式编程中的Either/Maybe monad
+- 软件事务内存(STM)模型
+
+**代码草稿**: `drafts/20260310_2112_tool_composition.rs`
+- ToolChain<A, B> 组合类型
+- InputFor<Next> trait 类型匹配
+- Rollbackable trait 回滚机制
+- TransactionResult 事务结果类型
+
+**待验证假设**:
+- [ ] 工具组合的类型系统能否覆盖实际AI编码场景的所有组合？
+- [ ] 回滚机制的性能开销是否可接受？
+- [ ] 如何处理跨进程/跨机器的工具组合？（分布式事务）
+- [ ] LLM如何理解类型化的工具链？（需要工具描述语言）
+
+**下一步研究方向**:
+1. 实现完整的工具链原型：ToolChain + Rollbackable
+2. 设计工具描述语言(SDL)：让LLM理解工具类型约束
+3. 研究与Refine4LLM的集成：精化演算 → 工具链自动生成

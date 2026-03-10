@@ -180,15 +180,16 @@
 
 ### 2026-03-10
 
-#### 21:00 工具设计 - 形式化验证与工具安全
-- [x] 研究方向: 工具设计 - 形式化验证与工具安全
-- [x] 核心问题: 如何通过形式化验证确保工具设计的正确性?
-- [x] 调研文献: MiniScope, DRIFT, VIGIL, ATLASS的安全框架对比
-- [x] 核心洞察: 现有安全框架均为"软约束"，可被绕过
-- [x] 核心洞察: 形式化验证是"硬边界"的数学基础
-- [x] 核心洞察: Kani Model Checker的验证能力（Function contracts, non-deterministic input）
-- [x] 产出: 更新 directions/10_tool_design.md (新增形式化验证分析)
-- [x] 产出: drafts/20260310_2100_formal_tool_verification.rs (验证工具原型)
+#### 21:12 工具设计 - 工具组合与事务性
+- [x] 研究方向: 工具设计 - 工具组合与事务性
+- [x] 核心问题: 当多个工具组合使用时，如何保证原子性和一致性?
+- [x] 产出: 分析现有AI工具（Claude Code/OpenCode）的组合问题
+- [x] 产出: 设计ToolChain<A, B>类型系统约束的工具组合
+- [x] 产出: 设计InputFor<Next> trait约束类型匹配
+- [x] 产出: 设计Rollbackable trait事务性回滚机制
+- [x] 产出: 工具元数据描述系统（供LLM理解工具能力）
+- [x] 产出: 更新 directions/10_tool_design.md (新增工具组合分析)
+- [x] 产出: drafts/20260310_2112_tool_composition.rs (完整工具组合原型)
 
 #### 20:54 工具设计 - Claude Code权限系统深入分析
 - [x] 研究方向: 工具设计 - Claude Code权限系统深入分析
