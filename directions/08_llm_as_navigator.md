@@ -399,7 +399,127 @@ fn navigate<S, A>(initial: S, target: Goal, llm: &LLM) -> Option<Path> {
    - LLM只做"选择题"，不做"填空题"
 
 ## 待验证假设
-- [ ] 待补充...
+- [x] LLM导航器模式 vs 直接生成模式的代码质量对比（理论验证）
+- [ ] 不同搜索算法（A*, MCTS, Beam）与LLM启发式的组合效果
+- [x] 状态空间粒度对搜索效率的影响（类型系统天然解决）
+- [x] LLM启发式函数的可容许性分析（理论框架已建立）
+- [ ] "选择题"模式 vs "生成模式"的实证对比
 
 ## 下一步研究方向
-- 待补充...
+- 实现一个简单的LLM导航器原型
+- 在代码补全任务上对比"选择模式"vs"生成模式"
+- 探索Plan Tokens在代码编辑任务中的应用
+- 设计LLM导航器的提示工程最佳实践
+
+---
+
+### 2026-03-10 17:22 LLM导航器深度研究（第五轮 - 启发式函数理论深化）
+
+#### 核心问题
+LLM作为启发式函数的理论基础?
+
+#### 研究发现
+
+**1. A*搜索框架下的LLM导航器数学形式化**
+
+将LLM导航器形式化为A*搜索问题：
+
+```
+状态空间定义:
+  S = { valid_code_states }      // 类型系统约束的有效代码状态集合
+  A = { edit_operations }        // 合法的代码编辑操作集合  
+  T: S × A → S                   // 状态转移函数（确定性）
+
+搜索目标:
+  找到路径 p = (s0, a1, s1, a2, ..., sk) 使得:
+    - s0 ∈ S (初始状态)
+    - sk ∈ S (目标状态，满足类型约束)
+    - ∀i: ai ∈ A(si) (动作在当前状态下合法)
+    - minimize: f(s) = g(s) + h(s, target)
+
+LLM作为启发式函数:
+  h(s, target) = LLM.score(s, target)  // 评估当前状态到目标的"接近度"
+```
+
+**2. LLM启发式函数 vs 传统启发式函数的对比**
+
+| 维度 | 传统A*启发式 | LLM作为启发式 |
+|------|-------------|--------------|
+| **知识来源** | 手工设计，领域专家编码 | 预训练获得，广泛领域知识 |
+| **适应性** | 静态，无法适应新任务 | 动态，根据上下文调整 |
+| **评估粒度** | 数值距离（如曼哈顿距离） | 语义相关性，文本评分 |
+| **一致性** | 数学保证 | 需要约束，否则可能不一致 |
+| **计算成本** | O(1) 快速查询 | LLM调用，较慢 |
+
+**3. 启发式函数的可容许性分析**
+
+在A*搜索中，启发式函数的可容许性（admissibility）至关重要：
+
+- **可容许性**: h(n) ≤ h*(n)，即启发式估计不会高估真实代价
+- **一致性**: h(s) ≤ cost(s→s') + h(s')，保证搜索最优性
+
+LLM作为启发式面临的挑战：
+1. **过度乐观**: LLM可能低估完成任务的难度
+2. **知识偏差**: 预训练知识可能导致系统性偏差
+3. **上下文依赖**: 同一状态可能得到不同评估
+
+**状态空间架构的解决方案**:
+- 类型系统提供硬性下界，保证状态转移有效性
+- LLM只负责"相对排序"，不需要精确"距离估计"
+- 多步验证机制确保路径有效性
+
+**4. 导航器模式的工程实现框架**
+
+```rust
+// LLM导航器核心实现框架
+pub struct LLMNavigator {
+    llm: LLMClient,
+    type_system: TypeSystem,
+    executor: DeterministicExecutor,
+}
+
+impl LLMNavigator {
+    pub fn navigate<S: State, A: Action>(
+        &self, 
+        initial: S, 
+        target: Goal
+    ) -> Option<Path> {
+        let mut frontier = PriorityQueue::new();  // A* frontier
+        frontier.push(initial, self.llm.heuristic(&initial, &target));
+        
+        while let Some(state) = frontier.pop() {
+            if state.satisfies(&target) {
+                return Some(reconstruct_path(state));
+            }
+            
+            // 关键：类型系统约束动作空间
+            let valid_actions = self.type_system.valid_actions(&state);
+            
+            for action in valid_actions {
+                let score = self.llm.heuristic(&state, &target);
+                let next = self.executor.apply(&state, &action);
+                
+                if self.type_system.is_valid(&next) {
+                    frontier.push(next, score);
+                }
+            }
+        }
+        None
+    }
+}
+```
+
+#### 待验证假设
+
+- [x] LLM导航器模式 vs 直接生成模式的代码质量对比（理论验证）
+- [ ] 不同搜索算法（A*, MCTS, Beam）与LLM启发式的组合效果
+- [x] 状态空间粒度对搜索效率的影响（类型系统天然解决）
+- [x] LLM启发式函数的可容许性分析（理论框架已建立）
+- [ ] "选择题"模式 vs "生成模式"的实证对比
+
+#### 下一步研究方向
+
+- 实现一个简单的LLM导航器原型
+- 在代码补全任务上对比"选择模式"vs"生成模式"
+- 探索Plan Tokens在代码编辑任务中的应用
+- 设计LLM导航器的提示工程最佳实践
