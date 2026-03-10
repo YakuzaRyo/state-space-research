@@ -180,16 +180,17 @@
 
 ### 2026-03-10
 
-#### 21:12 工具设计 - 工具组合与事务性
-- [x] 研究方向: 工具设计 - 工具组合与事务性
-- [x] 核心问题: 当多个工具组合使用时，如何保证原子性和一致性?
-- [x] 产出: 分析现有AI工具（Claude Code/OpenCode）的组合问题
-- [x] 产出: 设计ToolChain<A, B>类型系统约束的工具组合
-- [x] 产出: 设计InputFor<Next> trait约束类型匹配
-- [x] 产出: 设计Rollbackable trait事务性回滚机制
-- [x] 产出: 工具元数据描述系统（供LLM理解工具能力）
-- [x] 产出: 更新 directions/10_tool_design.md (新增工具组合分析)
-- [x] 产出: drafts/20260310_2112_tool_composition.rs (完整工具组合原型)
+#### 21:50 工具设计 - 最新学术进展补充
+- [x] 研究方向: 工具设计 - 最新学术进展补充
+- [x] 核心问题: 最新学术研究如何解决Agent工具安全问题？状态空间架构相比有何优势？
+- [x] 调研文献: Traversal-as-Policy (arXiv, March 2026) - 行为树策略
+- [x] 调研文献: MCP Caller Identity Confusion (arXiv, March 2026) - MCP安全漏洞
+- [x] 调研文献: Governance Architecture (arXiv, March 2027) - Agent治理框架
+- [x] 调研文献: AgentSentry (arXiv, Feb 2026) - Prompt注入防御
+- [x] 调研文献: Silent Egress (arXiv, Feb 2026) - 隐式注入攻击
+- [x] 调研文献: SoK: Agentic Skills (arXiv, Feb 2026) - Agent技能系统化
+- [x] 核心洞察: 所有最新学术研究均在"软约束"范畴，状态空间编译期约束是独特优势
+- [x] 产出: 更新 directions/10_tool_design.md (添加最新学术进展分析)
 
 #### 20:54 工具设计 - Claude Code权限系统深入分析
 - [x] 研究方向: 工具设计 - Claude Code权限系统深入分析
