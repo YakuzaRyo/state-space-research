@@ -1,52 +1,103 @@
-# OpenClaw Cron 任务配置
-# 状态空间架构研究定时任务
+# State Space Architecture Research Launcher
+# Manual trigger for research tasks
 
-# Cron表达式: 每2小时执行一次
-$CronExpression = "0 */2 * * *"
+param(
+    [switch]$Force,
+    [switch]$Status
+)
 
-# 任务配置
-$TaskConfig = @{
-    Name = "state-space-research"
-    Schedule = $CronExpression
-    Command = "sessions_spawn"
-    Parameters = @{
-        task = "请阅读 state-space-research/RESEARCH_AGENT.md 文件，按照其中的指令执行状态空间架构研究任务。完成后将研究成果提交到GitHub。"
-        mode = "run"
-        thinking = "high"
-        timeoutSeconds = 1800
-        label = "state-space-research"
+$Workspace = "C:\Users\11846\.openclaw-autoclaw\workspace\state-space-research"
+$LastResearchFile = Join-Path $Workspace ".last-research"
+
+Write-Host "========================================"
+Write-Host "  State Space Research Launcher"
+Write-Host "  $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Host "========================================"
+Write-Host ""
+
+if ($Status) {
+    Write-Host "Research Status:" -ForegroundColor Yellow
+    Write-Host ""
+    
+    if (Test-Path $LastResearchFile) {
+        $LastResearch = Get-Content $LastResearchFile
+        $LastTime = [DateTime]::Parse($LastResearch)
+        $Elapsed = (Get-Date) - $LastTime
+        $Hours = [Math]::Floor($Elapsed.TotalHours)
+        $Minutes = $Elapsed.Minutes
+        
+        Write-Host "Last research: $LastTime"
+        Write-Host "Elapsed: ${Hours}h ${Minutes}m"
+        
+        if ($Hours -ge 2) {
+            Write-Host "Status: Ready for new research" -ForegroundColor Green
+        } else {
+            Write-Host "Status: Not due yet" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "Last research: No record"
+        Write-Host "Status: First research needed" -ForegroundColor Green
+    }
+    
+    Write-Host ""
+    Write-Host "Git Status:" -ForegroundColor Yellow
+    Set-Location $Workspace
+    git status --short
+    
+    Write-Host ""
+    Write-Host "Recent commits:" -ForegroundColor Yellow
+    git log --oneline -3
+    
+    exit 0
+}
+
+if (-not $Force) {
+    if (Test-Path $LastResearchFile) {
+        $LastResearch = Get-Content $LastResearchFile
+        $LastTime = [DateTime]::Parse($LastResearch)
+        $Elapsed = (Get-Date) - $LastTime
+        
+        if ($Elapsed.TotalHours -lt 2) {
+            Write-Host "Less than 2 hours since last research, skipping"
+            Write-Host "Use -Force to override"
+            exit 0
+        }
     }
 }
 
-Write-Host "状态空间架构研究定时任务配置" -ForegroundColor Cyan
-Write-Host "================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "任务名称: $($TaskConfig.Name)"
-Write-Host "执行频率: 每2小时一次"
-Write-Host "Cron表达式: $($TaskConfig.Schedule)"
-Write-Host "超时时间: 30分钟"
-Write-Host "思考级别: high"
-Write-Host ""
-Write-Host "配置说明:" -ForegroundColor Yellow
-Write-Host "此配置文件用于设置OpenClaw的定时任务。"
-Write-Host "请使用以下命令之一设置定时任务："
-Write-Host ""
-Write-Host "方法1: 使用OpenClaw CLI (如果支持)"
-Write-Host "  openclaw cron add '$($TaskConfig.Schedule)' --task '$($TaskConfig.Parameters.task)'"
-Write-Host ""
-Write-Host "方法2: 使用系统任务计划程序 (Windows)"
-Write-Host "  创建一个每小时触发的基本任务"
-Write-Host "  操作: 启动程序"
-Write-Host "  程序: powershell.exe"
-Write-Host "  参数: -File `"$PSScriptRoot\run-research.ps1`""
-Write-Host ""
-Write-Host "方法3: 手动触发测试"
-Write-Host "  在OpenClaw对话中直接说: '开始状态空间架构研究'"
+Write-Host "Preparing to launch research task..."
 Write-Host ""
 
-# 导出为JSON配置
-$JsonConfig = $TaskConfig | ConvertTo-Json -Depth 10
-$ConfigPath = Join-Path $PSScriptRoot "cron-config.json"
-$JsonConfig | Out-File -FilePath $ConfigPath -Encoding UTF8
+(Get-Date -Format "yyyy-MM-ddTHH:mm:ssK") | Out-File -FilePath $LastResearchFile -Encoding UTF8
 
-Write-Host "配置已导出到: $ConfigPath" -ForegroundColor Green
+Write-Host "========================================"
+Write-Host "  Research Task Command"
+Write-Host "========================================"
+Write-Host ""
+Write-Host "Execute this in OpenClaw chat:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "sessions_spawn("
+Write-Host "  task='Read state-space-research/RESEARCH_AGENT.md and execute research',"
+Write-Host "  mode='run',"
+Write-Host "  thinking='high',"
+Write-Host "  timeoutSeconds=1800,"
+Write-Host "  label='state-space-research'"
+Write-Host ")"
+Write-Host ""
+Write-Host "Or just say: 'start state space research'"
+Write-Host ""
+
+$Hour = [int](Get-Date -Format "HH")
+$Direction = switch ($Hour) {
+    {$_ -in @(0,12)} { "Core Principles" }
+    {$_ -in @(2,14)} { "Layered Design" }
+    {$_ -in @(4,16)} { "LLM Navigator" }
+    {$_ -in @(6,18)} { "Implementation" }
+    {$_ -in @(8,20)} { "Tool Design" }
+    {$_ -in @(10,22)} { "Comparison" }
+    default { "Engineering Roadmap" }
+}
+
+Write-Host "Current direction: $Direction" -ForegroundColor Green
+Write-Host "Estimated time: 30 minutes" -ForegroundColor Green
+Write-Host ""
