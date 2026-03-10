@@ -8,6 +8,40 @@
 
 ## 研究历程
 
+### 2026-03-10 12:00 深度研究（第二轮）：六层硬性边界模型
+
+**研究范围**: 整合现有研究成果，构建系统化的硬性边界实现框架
+
+**核心发现**：
+通过分析 `drafts/20260310_1200_hard_boundaries.rs` 代码实现，发现硬性边界可以从原有的四层模型扩展为**六层渐进式保证体系**：
+
+```
+L5: 权限系统 (Capability Tracking)     ← 新增
+L4: 形式化验证 (Formal Verification)
+L3: 类型状态机 (Typestate Pattern)
+L2: API边界 (Opaque Types)
+L1: 类型系统 (Newtype/Phantom Types)
+L0: 编译期常量 (Const Generics)        ← 新增
+```
+
+**六层模型的关键洞察**：
+
+| 层级 | 机制 | 保证强度 | 实现成本 | 适用场景 |
+|------|------|---------|---------|---------|
+| L0 | Const Generics | ★★★☆☆ | 低 | 范围约束（端口、状态码） |
+| L1 | Newtype模式 | ★★★☆☆ | 低 | 类型区分（UserId vs SessionId） |
+| L2 | Opaque类型 | ★★★★☆ | 中 | 信息隐藏、访问控制 |
+| L3 | Typestate | ★★★★☆ | 中 | 状态转换约束 |
+| L4 | 形式验证 | ★★★★★ | 高 | 关键算法正确性 |
+| L5 | 权限系统 | ★★★★★ | 高 | 细粒度访问控制 |
+
+**关键认识**：
+1. **渐进式安全**：不需要在所有地方使用最高成本的L4/L5，根据风险选择合适的层级
+2. **组合效应**：多层组合产生比单层更强的保证（如 L1+L3 可以防止类型混淆和状态错误）
+3. **零成本渐进**：从L0开始，逐步增强约束而不破坏现有代码
+
+---
+
 ### 2026-03-10 12:00 深度研究
 - 搜索相关学术论文和开源项目
 - 研究类型系统与形式化验证的交叉领域
@@ -136,6 +170,113 @@ fn safe_add(a: u32, b: u32) -> u32
 - LLM 只能在类型系统允许的范围内操作
 - 错误不是在运行时"被发现"，而是在编译期"不存在"
 
+### 六层渐进式硬性边界模型
+
+基于 `drafts/20260310_1200_hard_boundaries.rs` 的系统化实现：
+
+**L0: 编译期常量约束 (Const Generics)**
+```rust
+/// 编译期范围检查 - 无运行时开销
+pub struct BoundedU32<const MIN: u32, const MAX: u32>(u32);
+type Port = BoundedU32<1, 65535>;
+type HttpStatusCode = BoundedU32<100, 599>;
+// Port::new(0) -> None，无效值在类型层面不可构造
+```
+- **保证**：数值范围在编译期确定
+- **成本**：零运行时开销
+- **应用**：端口、状态码、数组边界
+
+**L1: 类型系统边界 (Newtype + Phantom Types)**
+```rust
+/// 编译期类型区分
+struct UserId(u64);
+struct SessionId(u64);
+// UserId != SessionId != u64
+
+/// 幽灵类型标记状态
+struct StateMachine<S> {
+    data: Vec<u8>,
+    _state: PhantomData<S>,
+}
+```
+- **保证**：类型混淆在编译期发现
+- **成本**：零运行时开销（ZST）
+- **应用**：ID类型区分、状态标记
+
+**L2: API边界 (Opaque Types + 信息隐藏)**
+```rust
+/// 内部状态不公开
+struct InternalState { data: Vec<u8>, processed: bool }
+/// 只暴露受控接口
+pub struct SecureContainer(InternalState);
+impl SecureContainer {
+    pub fn view(&self) -> ReadOnlyView { ... }
+    pub fn process(&mut self) -> Result<(), Error> { ... }
+}
+```
+- **保证**：内部状态不可直接访问
+- **成本**： minimal（封装开销）
+- **应用**：模块边界、安全容器
+
+**L3: 类型状态机 (Typestate Pattern)**
+```rust
+/// 状态标记类型
+pub struct Created; pub struct Running; pub struct Stopped;
+
+impl StateMachine<Created> {
+    pub fn initialize(self) -> StateMachine<Initialized> { ... }
+}
+// 编译错误：无法从Created直接到Running
+// 编译错误：无法重复初始化（值已move）
+```
+- **保证**：状态转换顺序强制执行
+- **成本**：零运行时开销（类型擦除）
+- **应用**：连接生命周期、文件句柄、事务状态
+
+**L4: 形式化验证 (Verus风格)**
+```rust
+/// 带规约的函数
+fn safe_add(a: u32, b: u32) -> u32
+    requires a + b <= u32::MAX
+    ensures result == a + b
+{ a.checked_add(b).unwrap() }
+```
+- **保证**：数学级正确性证明
+- **成本**：规格代码 + SMT验证时间
+- **应用**：关键算法、安全敏感代码
+
+**L5: 权限系统 (Capability-based Security)**
+```rust
+/// 权限向量追踪访问能力
+pub struct PermissionVector<ReadMode, WriteMode> {
+    data: Vec<u8>,
+    _read: PhantomData<ReadMode>,
+    _write: PhantomData<WriteMode>,
+}
+// PermissionVector<Read, ()> 只能读
+// PermissionVector<Read, Write> 可读写
+```
+- **保证**：细粒度访问控制
+- **成本**：类型参数传播开销
+- **应用**：沙盒、权限降级
+
+---
+
+### 分层组合策略
+
+**核心原则**：从L0开始，按需升级
+
+```rust
+// L0 + L1 组合：带范围约束的类型安全ID
+struct UserId(BoundedU32<1, 999_999_999>);
+
+// L1 + L3 组合：类型状态 + 资源区分
+struct Connection<State, ResourceType> { ... }
+
+// L2 + L5 组合：受控API + 权限追踪
+struct SecureFile<ReadCap, WriteCap> { ... }
+```
+
 ### Rust 类型系统的独特优势
 
 **1. 所有权系统 + 生命周期**
@@ -186,26 +327,45 @@ struct Array<T, const N: usize> { data: [T; N] }
 
 ## 待验证假设
 
-- [ ] **假设1**：Rust typestate 模式可完整表达状态空间约束
-  - 验证方法：在 drafts/ 中实现状态机原型
+- [x] **假设1**：Rust typestate 模式可完整表达状态空间约束
+  - 验证方法：在 drafts/ 中实现状态机原型 ✅ `20260309_1645_rust_typestate.rs`
+  - 结果：Typestate模式能有效约束状态转换，但需要PhantomData标记，有一定 boilerplate
 
 - [ ] **假设2**：形式化验证成本与安全收益的权衡点
   - 验证方法：对比 Verus vs 运行时测试的投入产出
+  - 初步洞察：Verus 220行规格证明FIFO正确性，验证时间4.58秒，适合关键路径
 
 - [ ] **假设3**：API边界约束可以完全替代Prompt约束
   - 验证方法：设计实验，对比两种方式的有效性
+  - 新假设：需要结合**分层架构**才能完全替代（见 `07_layered_design.md`）
+
+- [ ] **假设4**：六层渐进式模型比单一高强度约束更实用
+  - 验证方法：在真实项目中应用六层模型，统计各层使用频率和捕获的错误类型
+
+- [ ] **假设5**：LLM在类型约束下的"创造性损失"是否可接受
+  - 验证方法：对比HumanEval得分，约束生成 vs 自由生成
 
 ## 下一步研究方向
 
-1. **06:00 实现技术方向**：深入 Rust 类型系统实现状态空间
-   - 探索 typestate、线性类型、权限系统的工程实践
+1. **分层架构深度整合**：
+   - 将六层边界模型与四层三明治架构（`07_layered_design.md`）深度整合
+   - 明确每层的边界实现策略
 
-2. **08:00 工具设计方向**：设计"无法产生错误"的工具集
-   - 基于类型系统构建安全工具链
+2. **实证研究设计**：
+   - 设计对照实验验证"硬性边界 vs Prompt约束"的有效性
+   - 量化分析六层模型的实际收益
 
-3. **类型系统论文调研**：
-   - POPL/ICFP 近年论文：类型导向代码生成
-   - 形式验证与LLM结合的最新进展
+3. **工具链构建**：
+   - 基于现有代码草稿，构建可复用的类型状态宏库
+   - 开发从JSON Schema到Typestate的代码生成器
+
+4. **形式验证集成**：
+   - 研究Verus与状态空间Agent的结合点
+   - 探索关键路径的形式化规约表达
+
+5. **LLM导航器优化**：
+   - 结合 `08_llm_as_navigator.md`，研究类型约束如何影响LLM的搜索效率
+   - 分析约束空间大小与生成质量的关系
 
 ## 代码草稿关联
 
