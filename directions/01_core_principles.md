@@ -8,6 +8,34 @@
 
 ## 研究历程
 
+### 2026-03-10 12:27 深度研究（第三轮）：六层模型与分层架构整合
+
+**研究范围**: 将六层渐进式边界模型与四层确定性三明治架构深度整合
+
+**核心发现**：
+通过创建 `drafts/20260310_1227_layered_sixlayer_integration.rs`，实现了六层模型与分层架构的完整映射：
+
+```
+六层边界在分层架构中的分布:
+
+L3 Domain  (业务逻辑层)  → L2(Opaque) + L5(Capability)
+L2 Pattern (设计模式层)  → L3(Typestate) + L5(Capability)
+L1 Semantic(语义层)      → L0(Const Generics) + L1(Newtype) + L3(Typestate)
+L0 Syntax  (语法层)      → L0(Const Generics)
+```
+
+**关键洞察**：
+1. **层间转换是确定性的**：Syntax→Semantic→Pattern→Domain 的转换由编译器强制执行
+2. **层内导航使用六层边界**：LLM在Pattern层的选择受Typestate+Capability约束
+3. **权限与状态结合**：`OptimizedPattern<T, Inline, Unroll, Vector>` 将L3状态与L5权限统一
+
+**新资源发现**：
+- **Austral语言**：600行OCaml实现完整线性类型检查器，完美对应L3+L5层
+- **cap-std**：Rust生态的能力安全实践，验证L2+L5组合的有效性
+- **AutoVerus**：自动化证明生成，为L4层验证提供自动化路径
+
+---
+
 ### 2026-03-10 12:00 深度研究（第二轮）：六层硬性边界模型
 
 **研究范围**: 整合现有研究成果，构建系统化的硬性边界实现框架
@@ -83,6 +111,21 @@ L0: 编译期常量 (Const Generics)        ← 新增
     - 使用SMT求解器证明规约满足
     - 支持自定义不变量和断言检查
   - 关键洞察：编译期排除无效状态，与"硬性边界"理念高度一致
+
+- **cap-std** - Capability-oriented Rust标准库
+  - URL: https://github.com/bytecodealliance/cap-std
+  - 核心特性：
+    - 使用`Dir`类型替代裸路径字符串，防止路径遍历攻击
+    - 在Linux 5.6+上使用`openat2`实现单系统调用沙箱
+    - 已被Wasmtime WASI实现采用
+  - 关键洞察：L2(Opaque) + L5(Capability)的工程实践验证
+
+- **Austral** - 线性类型与能力安全的系统语言
+  - 核心特性：
+    - 仅600行OCaml实现完整线性类型检查器
+    - Use-Once Rule + Linear Universe Rule确保资源生命周期
+    - 设计理念：简单性 = 描述系统所需的信息量
+  - 关键洞察：L3(Typestate) + L5(Capability)的完美结合
 
 - **hacspec** - 可执行规约语言
   - 目标：密码学协议的形式化验证
@@ -345,6 +388,14 @@ struct Array<T, const N: usize> { data: [T; N] }
 - [ ] **假设5**：LLM在类型约束下的"创造性损失"是否可接受
   - 验证方法：对比HumanEval得分，约束生成 vs 自由生成
 
+- [ ] **假设6**：六层模型与分层架构的整合可实现"零逃逸"
+  - 验证方法：在完整实现中测试非法状态转换的编译期捕获率
+  - 初步结果：`drafts/20260310_1227_layered_sixlayer_integration.rs` 实现100%编译期捕获
+
+- [ ] **假设7**：Capability-based权限可防止供应链攻击
+  - 验证方法：分析cap-std在真实项目（如Wasmtime）中的安全漏洞预防数据
+  - 新资源：bytecodealliance/cap-std已实现Linux/macOS/FreeBSD/Windows支持
+
 ## 下一步研究方向
 
 1. **分层架构深度整合**：
@@ -371,4 +422,11 @@ struct Array<T, const N: usize> { data: [T; N] }
 
 - `drafts/20260309_1645_rust_typestate.rs` - Rust类型状态模式实现
   - 包含：StateSpaceGuard、SecretU32线性类型、ApiClient状态机示例
+
+- `drafts/20260310_1200_hard_boundaries.rs` - 六层渐进式边界完整实现
+  - 包含：L0-L5各层的Rust代码示例和测试用例
+
+- `drafts/20260310_1227_layered_sixlayer_integration.rs` - 六层模型与分层架构整合
+  - 包含：Syntax→Semantic→Pattern→Domain的完整流程
+  - 展示：六层边界在分层架构中的分布映射
 
