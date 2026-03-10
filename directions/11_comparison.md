@@ -73,7 +73,29 @@ Claude Code/OpenCode 的根本缺陷是什么?
 - 记录token使用量作为效率指标
 - 区分外部引导vs模型自发推理
 
-#### 5. 实验设计方法学 (Crossover Design研究)
+#### 5. 开发者生产力测量方法学
+
+**定性vs定量测量** (Martin Fowler研究):
+
+| 维度 | 定量指标 (系统数据) | 定性指标 (人类数据) |
+|------|---------------------|---------------------|
+| **态度指标** | 无法测量 | 满意度、主观感受 (1-10分) |
+| **行为指标** | 部署频率、构建时间 | 自报告的流程时间 |
+| **无形因素** | 无法测量 | 心流状态、技术债务感知 |
+| **精度** | 高 (毫秒级) | 中等 (分类/序数) |
+| **连续性** | 实时 | 季度/半年度调查 |
+
+**关键洞察**:
+1. **混合方法最优**: 先用定性指标确定机会领域，再用定量指标深入分析
+2. **Google DORA实践**: 使用调查问卷收集部署频率、变更前置时间等行为指标
+3. **开发者体验**: 比"生产力"更积极的术语，关注 frictionless work
+
+**对实验设计的启示**:
+- 收集主观满意度 (Likert量表)
+- 记录自报告的任务完成时间
+- 评估工具易用性 (System Usability Scale)
+
+#### 6. 实验设计方法学 (Crossover Design研究)
 
 **软件工程中的交叉设计** (2024研究综述):
 
@@ -93,7 +115,35 @@ Claude Code/OpenCode 的根本缺陷是什么?
 - 记录处理顺序作为协变量
 - 考虑使用清洗期(washout period)减少延续效应
 
-#### 6. Refine4LLM: 程序精化约束 (POPL 2025)
+#### 7. 随机对照试验研究 (RCT)
+
+**生成式AI编码工具的RCT研究** (2024):
+
+**研究设计**:
+- **方法**: 混合方法 (调查 + RCT + 3周日记研究)
+- **参与者**: 大型跨国软件公司开发者
+- **干预**: 使用GitHub Copilot vs 不使用
+
+**关键发现**:
+| 指标 | 结果 |
+|------|------|
+| 感知有用性 | 显著提升 |
+| 感知愉悦性 | 显著提升 |
+| 代码可信度 | 无显著变化 |
+| 日常工作实践改变 | 84%参与者报告积极变化 |
+| 工作感受改变 | 66%参与者报告变化 |
+
+**意外发现**:
+- AI工具替代了网络搜索
+- 促进创造性构思
+- 从"热情增加"到"意识到需要跟上技术进步"
+
+**对实验设计的启示**:
+- 使用日记研究捕获纵向变化
+- 混合定量和定性数据
+- 关注感知变化而非仅客观指标
+
+#### 8. Refine4LLM: 程序精化约束 (POPL 2025)
 
 **核心概念**:
 - **程序精化 (Program Refinement)**: 将高级规约逐步转换为可执行代码，同时保持正确性
@@ -787,3 +837,38 @@ Phase 4: 报告阶段 (2周)
 5. **开发者接受度调研** - 优先级: 低
    - 原因: 产品化成功的关键因素
    - 行动: 设计用户调研问卷，收集定性反馈
+
+---
+
+## 研究总结
+
+### 核心量化发现汇总
+
+| 指标 | 软约束基准 | 硬边界预期 | 效应量 |
+|------|-----------|-----------|--------|
+| 复杂任务成功率 | 23% (SWE-Bench Pro) | >50% | Cohen's d > 0.5 |
+| 编译错误率 | 基准 (94%来自类型错误) | -50% | Odds Ratio > 2 |
+| 任务完成时间 | +19% (METR研究) | -20% | Cohen's d > 0.5 |
+| 安全漏洞率 | 40%+ | <5% | Risk Ratio > 8 |
+| 数据污染影响 | 12-21%基准受影响 | N/A | 需要去污染评估 |
+
+### 实验设计关键决策
+
+1. **统计方法**: 配对t检验 + Cohen's d效应量 + 功效分析
+2. **样本量**: 每组100任务，30参与者 (考虑20%流失)
+3. **任务分层**: 40%简单 + 35%中等 + 20%复杂 + 5%极复杂
+4. **控制变量**: 统一环境、模型、时间限制
+5. **效度威胁控制**: Latin Square设计 + 清洗期 + 顺序平衡
+
+### 关键参考文献
+
+1. **Type-Constrained Code Generation** (ETH Zurich, PLDI'25)
+2. **METR 2025**: AI tools impact on experienced developers
+3. **SWE-Bench**: Real-world software engineering benchmark
+4. **Anthropic Statistical Approach**: Model evaluation best practices
+5. **Praetorian**: Deterministic AI orchestration architecture
+6. **XGrammar**: Efficient structured generation (MLSys 2025)
+7. **Refine4LLM**: Program refinement constraints (POPL 2025)
+8. **Data Contamination Study** (Yale, ACL 2024)
+9. **CoT Effectiveness** (Nanjing University, 2024)
+10. **Crossover Design in SE** (2024 review)
