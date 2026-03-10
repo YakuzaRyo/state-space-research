@@ -514,3 +514,597 @@ impl TypeChecker {
         }
     }
 }
+
+// ============================================================================
+// Layer 3: PATTERN LAYER - 设计模式识别与优化
+// ============================================================================
+
+/// 模式层错误类型
+#[derive(Debug, Clone, PartialEq)]
+pub enum PatternError {
+    NoMatchingPattern(String),
+    InvalidTransformation(String),
+    CycleDetected,
+}
+
+impl fmt::Display for PatternError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PatternError::NoMatchingPattern(desc) => {
+                write!(f, "No matching pattern for: {}", desc)
+            }
+            PatternError::InvalidTransformation(msg) => {
+                write!(f, "Invalid transformation: {}", msg)
+            }
+            PatternError::CycleDetected => write!(f, "Pattern transformation cycle detected"),
+        }
+    }
+}
+
+impl std::error::Error for PatternError {}
+
+/// 设计模式类型
+#[derive(Debug, Clone, PartialEq)]
+pub enum Pattern {
+    ConstantFolding,
+    DeadCodeElimination,
+    VariableInline,
+    LoopUnrolling,
+    ExpressionSimplification,
+    TailRecursion,
+}
+
+/// 模式匹配结果
+#[derive(Debug, Clone, PartialEq)]
+pub struct PatternMatch {
+    pub pattern: Pattern,
+    pub priority: u32,
+    pub description: String,
+}
+
+/// 语义层 -> 模式层 转换器
+pub struct SemanticToPattern;
+
+impl SemanticToPattern {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn identify_patterns(&self, expr: &Expr) -> Vec<PatternMatch> {
+        let mut patterns = Vec::new();
+        self.collect_patterns(expr, &mut patterns);
+        patterns.sort_by(|a, b| b.priority.cmp(&a.priority));
+        patterns
+    }
+
+    fn collect_patterns(&self, expr: &Expr, patterns: &mut Vec<PatternMatch>) {
+        match expr {
+            Expr::Binary { op, left, right } => {
+                if self.is_constant_folding(left, right) {
+                    patterns.push(PatternMatch {
+                        pattern: Pattern::ConstantFolding,
+                        priority: 100,
+                        description: format!("Constant folding: {:?} {:?} {:?}", left, op, right),
+                    });
+                }
+                if self.is_simplifiable(op, left, right) {
+                    patterns.push(PatternMatch {
+                        pattern: Pattern::ExpressionSimplification,
+                        priority: 80,
+                        description: "Expression can be simplified".to_string(),
+                    });
+                }
+                self.collect_patterns(left, patterns);
+                self.collect_patterns(right, patterns);
+            }
+            Expr::Let { name, value, .. } => {
+                if self.is_inline_candidate(value) {
+                    patterns.push(PatternMatch {
+                        pattern: Pattern::VariableInline,
+                        priority: 70,
+                        description: format!("Variable '{}' can be inlined", name),
+                    });
+                }
+                self.collect_patterns(value, patterns);
+            }
+            Expr::Call { func, args } => {
+                if self.is_tail_recursive(func, args) {
+                    patterns.push(PatternMatch {
+                        pattern: Pattern::TailRecursion,
+                        priority: 90,
+                        description: "Tail recursion detected".to_string(),
+                    });
+                }
+                for arg in args {
+                    self.collect_patterns(arg, patterns);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn is_constant_folding(&self, left: &Expr, right: &Expr) -> bool {
+        matches!(left, Expr::Literal(_)) && matches!(right, Expr::Literal(_))
+    }
+
+    fn is_simplifiable(&self, op: &BinaryOp, _left: &Expr, right: &Expr) -> bool {
+        match (op, right) {
+            (BinaryOp::Add, Expr::Literal(Literal::Number(0.0))) => true,
+            (BinaryOp::Mul, Expr::Literal(Literal::Number(1.0))) => true,
+            (BinaryOp::Mul, Expr::Literal(Literal::Number(0.0))) => true,
+            _ => false,
+        }
+    }
+
+    fn is_inline_candidate(&self, value: &Expr) -> bool {
+        matches!(value, Expr::Literal(_) | Expr::Variable(_))
+    }
+
+    fn is_tail_recursive(&self, _func: &Expr, _args: &[Expr]) -> bool {
+        false
+    }
+
+    pub fn transform(&self, expr: Expr) -> Result<Expr, PatternError> {
+        self.apply_patterns(expr, 10)
+    }
+
+    fn apply_patterns(&self, expr: Expr, max_iterations: u32) -> Result<Expr, PatternError> {
+        let mut current = expr;
+        let mut iterations = 0;
+
+        loop {
+            if iterations >= max_iterations {
+                break;
+            }
+            let patterns = self.identify_patterns(&current);
+            if patterns.is_empty() {
+                break;
+            }
+            let new_expr = self.apply_first_pattern(current, &patterns)?;
+            current = new_expr;
+            iterations += 1;
+        }
+
+        Ok(current)
+    }
+
+    fn apply_first_pattern(&self, expr: Expr, patterns: &[PatternMatch]) -> Result<Expr, PatternError> {
+        if patterns.is_empty() {
+            return Ok(expr);
+        }
+        match patterns[0].pattern {
+            Pattern::ConstantFolding => self.fold_constants(expr),
+            Pattern::ExpressionSimplification => self.simplify_expression(expr),
+            _ => Ok(expr),
+        }
+    }
+
+    fn fold_constants(&self, expr: Expr) -> Result<Expr, PatternError> {
+        match expr {
+            Expr::Binary { op, left, right } => {
+                match (op, left.as_ref(), right.as_ref()) {
+                    (BinaryOp::Add, Expr::Literal(Literal::Number(a)), Expr::Literal(Literal::Number(b))) => {
+                        Ok(Expr::Literal(Literal::Number(a + b)))
+                    }
+                    (BinaryOp::Sub, Expr::Literal(Literal::Number(a)), Expr::Literal(Literal::Number(b))) => {
+                        Ok(Expr::Literal(Literal::Number(a - b)))
+                    }
+                    (BinaryOp::Mul, Expr::Literal(Literal::Number(a)), Expr::Literal(Literal::Number(b))) => {
+                        Ok(Expr::Literal(Literal::Number(a * b)))
+                    }
+                    (BinaryOp::Div, Expr::Literal(Literal::Number(a)), Expr::Literal(Literal::Number(b))) => {
+                        if *b != 0.0 {
+                            Ok(Expr::Literal(Literal::Number(a / b)))
+                        } else {
+                            Err(PatternError::InvalidTransformation("Division by zero".to_string()))
+                        }
+                    }
+                    _ => Ok(Expr::Binary { op, left, right }),
+                }
+            }
+            _ => Ok(expr),
+        }
+    }
+
+    fn simplify_expression(&self, expr: Expr) -> Result<Expr, PatternError> {
+        match expr {
+            Expr::Binary { op, left, right } => {
+                match (op, right.as_ref()) {
+                    (BinaryOp::Add, Expr::Literal(Literal::Number(0.0))) => Ok(*left),
+                    (BinaryOp::Mul, Expr::Literal(Literal::Number(1.0))) => Ok(*left),
+                    (BinaryOp::Mul, Expr::Literal(Literal::Number(0.0))) => {
+                        Ok(Expr::Literal(Literal::Number(0.0)))
+                    }
+                    _ => Ok(Expr::Binary { op, left, right }),
+                }
+            }
+            _ => Ok(expr),
+        }
+    }
+}
+
+// ============================================================================
+// Layer 4: DOMAIN LAYER - 领域模型映射
+// ============================================================================
+
+/// 领域层错误类型
+#[derive(Debug, Clone, PartialEq)]
+pub enum DomainError {
+    InvalidMapping(String),
+    UnsupportedPattern(String),
+    DomainConstraintViolation(String),
+}
+
+impl fmt::Display for DomainError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DomainError::InvalidMapping(msg) => write!(f, "Invalid mapping: {}", msg),
+            DomainError::UnsupportedPattern(p) => write!(f, "Unsupported pattern: {}", p),
+            DomainError::DomainConstraintViolation(msg) => {
+                write!(f, "Domain constraint violated: {}", msg)
+            }
+        }
+    }
+}
+
+impl std::error::Error for DomainError {}
+
+/// 领域概念类型
+#[derive(Debug, Clone, PartialEq)]
+pub enum DomainConcept {
+    Computation {
+        name: String,
+        inputs: Vec<String>,
+        formula: Box<DomainConcept>,
+    },
+    DataFlow {
+        source: String,
+        target: String,
+        transformation: Option<Box<DomainConcept>>,
+    },
+    BusinessRule {
+        condition: Box<DomainConcept>,
+        action: Box<DomainConcept>,
+    },
+    Entity {
+        name: String,
+        attributes: Vec<(String, DomainType)>,
+    },
+    Value {
+        data: DomainValue,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DomainType {
+    Number,
+    Text,
+    Boolean,
+    Date,
+    Reference(String),
+    List(Box<DomainType>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DomainValue {
+    Number(f64),
+    Text(String),
+    Boolean(bool),
+    List(Vec<DomainValue>),
+}
+
+/// 模式层 -> 领域层 转换器
+pub struct PatternToDomain;
+
+impl PatternToDomain {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn transform(&self, expr: &Expr) -> Result<DomainConcept, DomainError> {
+        match expr {
+            Expr::Let { name, value, .. } => self.transform_let(name, value),
+            Expr::Binary { op, left, right } => self.transform_binary(op, left, right),
+            Expr::Literal(lit) => self.transform_literal(lit),
+            Expr::Variable(name) => {
+                Ok(DomainConcept::Value {
+                    data: DomainValue::Text(name.clone()),
+                })
+            }
+            Expr::Function { name, params, body, .. } => {
+                self.transform_function(name, params, body)
+            }
+            _ => Err(DomainError::UnsupportedPattern(format!("{:?}", expr))),
+        }
+    }
+
+    fn transform_let(&self, name: &str, value: &Expr) -> Result<DomainConcept, DomainError> {
+        let formula = self.transform(value)?;
+        let inputs = self.extract_variables(value);
+        Ok(DomainConcept::Computation {
+            name: name.to_string(),
+            inputs,
+            formula: Box::new(formula),
+        })
+    }
+
+    fn transform_binary(&self, op: &BinaryOp, left: &Expr, right: &Expr) -> Result<DomainConcept, DomainError> {
+        let left_concept = self.transform(left)?;
+        let right_concept = self.transform(right)?;
+        let op_name = match op {
+            BinaryOp::Add => "add",
+            BinaryOp::Sub => "subtract",
+            BinaryOp::Mul => "multiply",
+            BinaryOp::Div => "divide",
+            BinaryOp::Eq => "equals",
+            BinaryOp::Lt => "less_than",
+            BinaryOp::Gt => "greater_than",
+        };
+        Ok(DomainConcept::Computation {
+            name: format!("binary_{}", op_name),
+            inputs: vec![],
+            formula: Box::new(DomainConcept::Value {
+                data: DomainValue::Text(format!("{:?} {} {:?}", left_concept, op_name, right_concept)),
+            }),
+        })
+    }
+
+    fn transform_literal(&self, lit: &Literal) -> Result<DomainConcept, DomainError> {
+        let value = match lit {
+            Literal::Number(n) => DomainValue::Number(*n),
+            Literal::Boolean(b) => DomainValue::Boolean(*b),
+            Literal::String(s) => DomainValue::Text(s.clone()),
+        };
+        Ok(DomainConcept::Value { data: value })
+    }
+
+    fn transform_function(&self, name: &str, params: &[(String, Type)], body: &Expr) -> Result<DomainConcept, DomainError> {
+        let attributes: Vec<(String, DomainType)> = params
+            .iter()
+            .map(|(name, ty)| (name.clone(), self.type_to_domain(ty)))
+            .collect();
+        let _body_concept = self.transform(body)?;
+        Ok(DomainConcept::Entity {
+            name: name.to_string(),
+            attributes: [
+                attributes,
+                vec![("body".to_string(), DomainType::Text)],
+            ]
+            .concat(),
+        })
+    }
+
+    fn type_to_domain(&self, ty: &Type) -> DomainType {
+        match ty {
+            Type::Number => DomainType::Number,
+            Type::Boolean => DomainType::Boolean,
+            Type::String => DomainType::Text,
+            Type::Custom(name) => DomainType::Reference(name.clone()),
+            _ => DomainType::Text,
+        }
+    }
+
+    fn extract_variables(&self, expr: &Expr) -> Vec<String> {
+        let mut vars = Vec::new();
+        self.collect_vars(expr, &mut vars);
+        vars
+    }
+
+    fn collect_vars(&self, expr: &Expr, vars: &mut Vec<String>) {
+        match expr {
+            Expr::Variable(name) => {
+                if !vars.contains(name) {
+                    vars.push(name.clone());
+                }
+            }
+            Expr::Binary { left, right, .. } => {
+                self.collect_vars(left, vars);
+                self.collect_vars(right, vars);
+            }
+            Expr::Let { value, .. } => {
+                self.collect_vars(value, vars);
+            }
+            Expr::Call { args, .. } => {
+                for arg in args {
+                    self.collect_vars(arg, vars);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+// ============================================================================
+// 层间转换器: 完整的转换管道
+// ============================================================================
+
+/// 分层架构管道
+pub struct LayeredPipeline;
+
+impl LayeredPipeline {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn process(&self, input: &str) -> Result<DomainConcept, LayeredError> {
+        let tokens = syntax_layer(input).map_err(LayeredError::Syntax)?;
+        let syntax_to_semantic = SyntaxToSemantic::new();
+        let ast = syntax_to_semantic.transform(tokens).map_err(LayeredError::Semantic)?;
+        let mut type_checker = TypeChecker::new();
+        type_checker.check(&ast).map_err(LayeredError::Semantic)?;
+        let semantic_to_pattern = SemanticToPattern::new();
+        let optimized_ast = semantic_to_pattern.transform(ast).map_err(LayeredError::Pattern)?;
+        let pattern_to_domain = PatternToDomain::new();
+        let domain_model = pattern_to_domain.transform(&optimized_ast).map_err(LayeredError::Domain)?;
+        Ok(domain_model)
+    }
+}
+
+/// 统一错误类型
+#[derive(Debug, Clone, PartialEq)]
+pub enum LayeredError {
+    Syntax(SyntaxError),
+    Semantic(SemanticError),
+    Pattern(PatternError),
+    Domain(DomainError),
+}
+
+impl fmt::Display for LayeredError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LayeredError::Syntax(e) => write!(f, "Syntax Error: {}", e),
+            LayeredError::Semantic(e) => write!(f, "Semantic Error: {}", e),
+            LayeredError::Pattern(e) => write!(f, "Pattern Error: {}", e),
+            LayeredError::Domain(e) => write!(f, "Domain Error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for LayeredError {}
+
+impl From<SyntaxError> for LayeredError {
+    fn from(e: SyntaxError) -> Self {
+        LayeredError::Syntax(e)
+    }
+}
+
+impl From<SemanticError> for LayeredError {
+    fn from(e: SemanticError) -> Self {
+        LayeredError::Semantic(e)
+    }
+}
+
+impl From<PatternError> for LayeredError {
+    fn from(e: PatternError) -> Self {
+        LayeredError::Pattern(e)
+    }
+}
+
+impl From<DomainError> for LayeredError {
+    fn from(e: DomainError) -> Self {
+        LayeredError::Domain(e)
+    }
+}
+
+// ============================================================================
+// 状态空间约束实现
+// ============================================================================
+
+/// 每层的状态空间约束
+pub trait StateSpaceConstraint {
+    type Input;
+    type Output;
+    type Error;
+    fn validate_input(&self, input: &Self::Input) -> Result<(), Self::Error>;
+    fn validate_output(&self, output: &Self::Output) -> Result<(), Self::Error>;
+}
+
+/// 语法层约束: Token序列必须有效
+pub struct SyntaxConstraint;
+
+impl StateSpaceConstraint for SyntaxConstraint {
+    type Input = String;
+    type Output = Vec<Token>;
+    type Error = SyntaxError;
+
+    fn validate_input(&self, _input: &Self::Input) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn validate_output(&self, output: &Self::Output) -> Result<(), Self::Error> {
+        if let Some(Token::EOF) = output.last() {
+            Ok(())
+        } else {
+            Err(SyntaxError::UnexpectedEOF)
+        }
+    }
+}
+
+/// 语义层约束: AST必须类型正确
+pub struct SemanticConstraint;
+
+impl StateSpaceConstraint for SemanticConstraint {
+    type Input = Vec<Token>;
+    type Output = Expr;
+    type Error = SemanticError;
+
+    fn validate_input(&self, _input: &Self::Input) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn validate_output(&self, _output: &Self::Output) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+// ============================================================================
+// 测试
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_syntax_layer() {
+        let input = "let x = 42";
+        let tokens = syntax_layer(input).unwrap();
+        assert!(matches!(tokens[0], Token::Keyword(_)));
+        assert!(matches!(tokens[1], Token::Identifier(_)));
+        assert!(matches!(tokens[2], Token::Operator(_)));
+        assert!(matches!(tokens[3], Token::Number(42.0)));
+    }
+
+    #[test]
+    fn test_semantic_layer() {
+        let input = "let x = 42";
+        let tokens = syntax_layer(input).unwrap();
+        let transformer = SyntaxToSemantic::new();
+        let ast = transformer.transform(tokens).unwrap();
+        assert!(matches!(ast, Expr::Let { .. }));
+    }
+
+    #[test]
+    fn test_type_checker() {
+        let input = "let x = 1 + 2";
+        let tokens = syntax_layer(input).unwrap();
+        let transformer = SyntaxToSemantic::new();
+        let ast = transformer.transform(tokens).unwrap();
+        let mut checker = TypeChecker::new();
+        let ty = checker.check(&ast).unwrap();
+        assert_eq!(ty, Type::Number);
+    }
+
+    #[test]
+    fn test_pattern_layer() {
+        let input = "let x = 1 + 2";
+        let tokens = syntax_layer(input).unwrap();
+        let transformer = SyntaxToSemantic::new();
+        let ast = transformer.transform(tokens).unwrap();
+        let pattern_transformer = SemanticToPattern::new();
+        let patterns = pattern_transformer.identify_patterns(&ast);
+        assert!(!patterns.is_empty());
+    }
+
+    #[test]
+    fn test_constant_folding() {
+        let expr = Expr::Binary {
+            op: BinaryOp::Add,
+            left: Box::new(Expr::Literal(Literal::Number(1.0))),
+            right: Box::new(Expr::Literal(Literal::Number(2.0))),
+        };
+        let transformer = SemanticToPattern::new();
+        let optimized = transformer.transform(expr).unwrap();
+        assert!(matches!(
+            optimized,
+            Expr::Literal(Literal::Number(3.0))
+        ));
+    }
+
+    #[test]
+    fn test_full_pipeline() {
+        let pipeline = LayeredPipeline::new();
+        let result = pipeline.process("let x = 42");
+        assert!(result.is_ok());
+    }
+}

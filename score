@@ -1,0 +1,16 @@
+#!/bin/bash
+# Score CLI wrapper
+
+cd "$(dirname "$0")"
+
+if [ $# -eq 0 ]; then
+    echo "用法: score [add|reduce|status|reset] [参数...]"
+    echo ""
+    echo "  add [方向] [秒数]    添加评分记录"
+    echo "  reduce [原因]        手动减分"
+    echo "  status               显示状态"
+    echo "  reset                重置数据"
+    exit 1
+fi
+
+python3 system/scheduler/score_cli.py "$@"

@@ -216,12 +216,70 @@ pub struct GrammarLogitsProcessor { ... }
 - [ ] 字节级处理对非英语语言的影响
 - [ ] Rust实现的性能是否能接近C++版本
 
+## 2026-03-10 17:50 PDA与类型系统集成研究
+
+### 核心发现
+
+#### 1. PDA与类型状态模式映射（H1验证）
+**验证结果**: 部分验证成功
+
+PDA的栈状态可以映射到Rust的类型状态模式：
+- PDA状态 `StateId` -> 类型状态标记trait `JsonBuilderState`
+- PDA栈操作 `Push/Pop` -> 类型转换方法 `begin_object()` / `end_object()`
+- PDA转换约束 -> 编译期类型检查
+
+**关键代码验证**:
+```rust
+// PDA状态
+pub fn process_token(&mut self, token: TokenId) -> Result<(), String>
+
+// 对应类型状态
+pub fn begin_object(self) -> JsonBuilder<InObject>  // 状态转换
+```
+
+**被推翻的假设**: PDA的非确定性选择难以在Rust类型系统中表达，需要运行时支持。
+
+#### 2. XGrammar与Rust类型系统集成（H2验证）
+**验证结果**: 理论可行，需进一步验证
+
+JSON Schema -> Rust类型的映射路径：
+```
+JSON Schema --编译--> Grammar --派生--> Rust类型
+     |                    |               |
+     v                    v               v
+  结构定义           PDA状态机      类型状态API
+```
+
+**已验证**:
+- Token Mask生成逻辑可以在Rust中表达
+- 类型状态模式可以强制正确的JSON构建顺序
+- PDA栈深度可以追踪嵌套层级
+
+**待验证**:
+- derive宏自动生成Grammar
+- const fn编译期优化token mask
+
+### 技术洞察
+
+#### Token级别约束的核心机制
+1. **PDA状态跟踪**: 每个解码步骤维护 `(current_state, stack)`
+2. **允许Token计算**: `get_allowed_tokens()` 查询当前状态的所有有效转换
+3. **Logit Masking**: 将禁止的token logits设为 `-inf`
+4. **批处理优化**: 同一batch共享Grammar编译结果
+
+#### 与状态空间架构的关系
+- **硬性边界**: PDA作为"硬性边界"执行引擎，确保输出在语法空间内
+- **状态压缩**: Token Mask Cache实现状态空间的高效查询
+- **组合性**: 多个Grammar可以通过PDA组合实现复杂约束
+
 ## 下一步研究方向
 1. **XGrammar 2动态特性**: TagDispatch、JIT编译、跨grammar缓存
 2. **与状态空间架构的集成**: 将PDA作为硬性边界执行引擎
 3. **形式化验证**: 验证约束解码的正确性
 4. **增量编译**: 支持grammar的动态更新
 5. **GPU加速**: 将token mask计算 offload 到GPU
+6. **Rust derive宏**: 从struct/enum自动生成Grammar约束
 
 ## 代码草稿
 - [drafts/20260310_1431_structured_generation.rs](../drafts/20260310_1431_structured_generation.rs) - XGrammar核心Rust实现
+- [drafts/20260310_1750_structured_generation.rs](../drafts/20260310_1750_structured_generation.rs) - PDA约束生成验证

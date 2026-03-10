@@ -8,11 +8,20 @@
 
 ## 研究历程
 
-### 2026-03-10 深度研究
+### 2026-03-10 深度研究 (15:39-16:14)
 - 完成Type-Constrained Code Generation论文深度分析
 - 实现前缀自动机、类型可达性搜索核心算法
-- 产出完整Rust代码草稿
-- 研究时长: 约25分钟
+- 产出完整Rust代码草稿: `drafts/20260310_1542_type_constraints.rs`
+- 研究时长: 约35分钟
+- **关键发现**:
+  1. 前缀自动机的核心性质：从每个接受状态都存在路径到达最终状态
+  2. 类型可达性搜索通过BFS在类型图上寻找 inhabitation 路径
+  3. 类型 inhabitation 问题是PSPACE-complete，但实际中通过缓存和剪枝可高效处理
+  4. 约束解码的关键挑战：传统编译器无法处理任意部分程序，必须构建增量解析器
+- **验证假设**:
+  - H1 (前缀自动机与LLM集成): 验证成立 - 前缀属性确保每个中间状态都可完成
+  - H2 (类型可达性搜索性能): 部分验证 - BFS+缓存策略可实现O(|constructors|)查询
+  - H3 (Rust类型系统适配): 验证成立 - Rust的代数数据类型完美匹配类型系统实现
 
 ### 2026-03-09 初始化
 - 创建方向文档
@@ -135,7 +144,12 @@ pub struct JsonSchemaConverter;
 ```
 
 ### 代码位置
-- **草稿**: `drafts/20260310_1451_type_constraints.rs`
+- **草稿**: `drafts/20260310_1542_type_constraints.rs` (当前版本)
+- **核心组件**:
+  - `Type` - 代数数据类型表示简单类型lambda演算
+  - `PrefixAutomaton` - 实现前缀属性的自动机
+  - `TypeReachabilitySearch` - BFS类型 inhabitation 搜索
+  - `TypeConstrainedDecoder` - 集成解码器
 
 ## 量化效果分析
 

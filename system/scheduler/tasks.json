@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "description": "持久型定时任务配置 - 支持 subagent 并发控制",
+  "global": {
+    "max_concurrent_subagents": 6,
+    "project_dir": "D:/11846/state-space-research",
+    "log_dir": "logs/scheduler",
+    "state_file": "system/scheduler/state.json"
+  },
+  "tasks": [
+    {
+      "id": "research-cycle",
+      "name": "研究任务周期",
+      "enabled": true,
+      "schedule": {
+        "type": "interval",
+        "minutes": 10
+      },
+      "action": {
+        "type": "research",
+        "command": "/research",
+        "timeout": 600,
+        "requires_subagent": true
+      },
+      "concurrency": {
+        "max_subagents": 6,
+        "queue_if_busy": true,
+        "skip_if_overload": false
+      },
+      "retry": {
+        "max_attempts": 2,
+        "delay_seconds": 60
+      }
+    },
+    {
+      "id": "clear-session",
+      "name": "清理会话",
+      "enabled": true,
+      "schedule": {
+        "type": "interval",
+        "hours": 1
+      },
+      "action": {
+        "type": "builtin",
+        "command": "/clear",
+        "timeout": 30,
+        "requires_subagent": false
+      },
+      "concurrency": {
+        "max_subagents": 0,
+        "queue_if_busy": false,
+        "skip_if_overload": true
+      }
+    },
+    {
+      "id": "health-check",
+      "name": "健康检查",
+      "enabled": true,
+      "schedule": {
+        "type": "interval",
+        "minutes": 5
+      },
+      "action": {
+        "type": "script",
+        "script": "system/scheduler/health_check.py",
+        "timeout": 60,
+        "requires_subagent": false
+      },
+      "concurrency": {
+        "max_subagents": 0,
+        "skip_if_overload": true
+      }
+    },
+    {
+      "id": "meta-scheduler",
+      "name": "元调度器 - 重新创建定时任务",
+      "enabled": true,
+      "schedule": {
+        "type": "interval",
+        "days": 2
+      },
+      "action": {
+        "type": "script",
+        "script": "system/scheduler/meta_scheduler.py",
+        "timeout": 300,
+        "requires_subagent": false
+      },
+      "concurrency": {
+        "max_subagents": 0,
+        "queue_if_busy": false,
+        "skip_if_overload": false
+      },
+      "meta": {
+        "inherits_previous_tasks": true,
+        "backup_config": true,
+        "version_increment": true
+      }
+    }
+  ],
+  "resource_limits": {
+    "max_subagents_global": 6,
+    "max_tasks_per_hour": 20,
+    "cooldown_after_overload_seconds": 300
+  }
+}

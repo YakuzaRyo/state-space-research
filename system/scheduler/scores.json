@@ -1,0 +1,47 @@
+{
+  "total_score": 4,
+  "runs": [
+    {
+      "timestamp": "2026-03-10T09:13:00",
+      "task_id": "aa234caec371b5880",
+      "direction": "LLM导航器深度研究",
+      "duration_seconds": 2400,
+      "score": 1,
+      "level": "EXCELLENT",
+      "percentage": 160.0
+    },
+    {
+      "timestamp": "2026-03-10T17:09:00",
+      "task_id": "ad23690507b624c31",
+      "direction": "分层架构设计",
+      "duration_seconds": 1620,
+      "score": 1,
+      "level": "EXCELLENT",
+      "percentage": 108.0
+    },
+    {
+      "timestamp": "2026-03-10T20:00:00",
+      "task_id": "a03bae6b59fb6b3e3",
+      "direction": "工程路线图规划",
+      "duration_seconds": 2100,
+      "score": 1,
+      "level": "EXCELLENT",
+      "percentage": 140.0
+    },
+    {
+      "timestamp": "2026-03-10T21:06:00",
+      "task_id": "a4906c4e49ad67d7f",
+      "direction": "Rust类型系统",
+      "duration_seconds": 1500,
+      "score": 1,
+      "level": "EXCELLENT",
+      "percentage": 100.0
+    }
+  ],
+  "stats": {
+    "total_runs": 4,
+    "above_25_min": 4,
+    "below_20_min": 0,
+    "avg_duration_seconds": 1905
+  }
+}
