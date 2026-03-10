@@ -47,22 +47,57 @@ Rust 类型系统实现
 - 研究Kani model checker与状态空间验证的集成
 - 设计状态空间Agent的Rust核心数据结构
 
-### 2026-03-09 16:45 深入研究（重试）
-**研究发现**：
-- **Verus验证器**: CMU开发的Rust程序验证工具，利用Rust线性类型系统简化SMT验证，将子结构逻辑（如分离逻辑）引入类型系统
-- **Typestate模式**: Rust编译期强制执行运行时状态顺序，如"必须先认证才能发送消息"、"文件关闭后不可I/O"
-- **hacspec**: 针对密码学代码的Rust子集，通过三层类型检查（Rust常规检查→hacspec语法转换→hacspec形式化规则）在编译期排除非恒定时间操作
-- **TypeSec**: OpenCL的Rust封装，使用类型状态模式在编译期捕获9类API错误（空队列启动内核、飞行中缓冲区读写等），零运行时开销
+### 2026-03-10 18:28 深入研究
+**研究方向**: Rust类型系统实现状态空间
+**核心问题**: 如何用Rust类型系统实现状态空间?
+
+**研究发现**:
+1. **Kani Rust Verifier** (AWS/CMU):
+   - bit-precise model checker for Rust
+   - 检查 safety (undefined behavior) 和 correctness (panics, overflow, custom assertions)
+   - 支持 function contracts (Rust版函数前置/后置条件)
+   - 使用 `kani::any()` 创建非确定性输入，自动遍历所有可能值
+   - 验证示例: `#[kani::proof]` 自动检查所有有效输入是否满足规范
+
+2. **hacspec 可执行规约语言**:
+   - Rust的功能子集 + 专用标准库
+   - 可通过 Hax 工具链翻译到 Coq/Lean/F* 等形式化证明助手
+   - Secret Integer 类型确保恒定时间操作
+   - 论文: "HACSpec: A gateway to high-assurance cryptography" (POPL 2022)
+   - 应用: 区块链投票智能合约形式化验证
+
+3. **现有代码草稿分析** (`drafts/20260309_1645_rust_typestate.rs`):
+   - StateSpaceGuard: 编译期状态机 (Unverified→Verified→Executed)
+   - SecretU32: 恒定时间操作的秘密整数
+   - ApiClient: 类型安全的API调用序列
+   - **局限性**: 纯类型系统无法处理"条件分支"(非确定性)场景
 
 **架构洞察**:
-- **线性类型即权限**: Rust的`move`语义天然对应分离逻辑中的权限转移，类型系统的`drop`检查确保资源释放
-- **编译期状态机**: 通过PhantomData标记状态，无效状态转移在编译期被拒绝，无需运行时检查
-- **零成本抽象**: Typestate模式生成的汇编与原始API调用完全一致，cargo-bloat验证无额外代码体积
+- **三层验证策略**:
+  - Layer 1: 编译期类型检查 (Typestate + PhantomData)
+  - Layer 2: Kani model checker (运行时属性验证)
+  - Layer 3: hacspec → 形式化证明 (数学级保证)
+- **Kani vs 传统测试**: 测试验证有限输入，Kani验证**所有可能输入**
+- **状态空间Agent的Rust实现路径**:
+  - 核心数据结构用 Typestate 模式
+  - 关键属性用 Kani 证明
+  - 安全关键代码用 hacspec 规约
 
-**关键数据**:
-- Verus验证: 220行规格代码证明FIFO队列正确性，验证时间4.58秒
-- TypeSec开销: 16MB缓冲区操作最坏情况+3.88%，100MB以上<0.7%
-- hacspec安全: U8/U32等Secret Integer类型仅暴露恒定时间操作，除法等非恒定操作在类型层面不可用
+**技术细节**:
+- Kani function contracts: `#[requires(...)]`, `#[ensures(...)]`
+- hacspec 通过 `hax` 输出到 F*/Coq/Lean 进行证明
+- Rust const generics 可实现编译期数值计算
+
+**待验证假设**:
+- [x] 状态空间API的Rust实现是否可以完全避免运行时状态验证? (部分可行，但复杂分支需要Kani辅助)
+- [x] PhantomData是否足以处理复杂的多维状态空间? (可行，需配合泛型约束)
+- [ ] 状态空间Agent的多线程交互如何用类型系统约束?
+- [ ] 如何设计"状态空间编译器"自动将DSL转换为Rust类型?
+
+**下一步研究方向**:
+- 探索Kani证明与状态空间验证的集成
+- 设计状态空间Agent的核心数据结构 (使用Typestate + Kani contracts)
+- 研究"状态空间DSL"到Rust类型系统的编译器
 
 ### 2026-03-09 初始化
 - 创建方向文档
