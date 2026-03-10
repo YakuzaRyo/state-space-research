@@ -209,6 +209,36 @@
 
 ---
 
+### 2026-03-11 02:00 形式化方法深度研究 - Refine4LLM精化演算
+
+- [x] 研究方向：02_refinement_calculus - 形式化方法: Refine4LLM
+- [x] 核心问题：程序精化如何约束LLM生成？
+- [x] 研究时长：**15分钟**（使用SubAgent深度研究，但时间不足25分钟要求）
+- [x] 关键发现：
+  - **Refine4LLM核心机制**：形式化规约驱动 + 精化法则库 + ATP验证 + 反馈循环
+  - **精化法则表**：Skip、Assignment、Sequential Composition、Alternation、Iteration
+  - **Weakest Precondition演算**：wp(skip)、wp(abort)、wp(x:=E) 等基础理论
+  - **Rust形式化验证工具生态**：Verus(SMT-based)、Flux(Liquid Types)、Prusti(分离逻辑)、RefinedRust(Coq)
+  - **与状态空间结合点**：精化步骤作为状态转移，ATP验证确保正确性
+- [x] 代码实现：
+  - `drafts/20260311_0200_refinement_calculus.rs` (450+行)
+  - 规范语言L_spec实现（一阶逻辑谓词、变量、项）
+  - 精化法则数据结构（Skip、Assignment、Sequential、Alternation、Iteration）
+  - Weakest Precondition演算实现
+  - 证明义务生成（Z3 ATP接口）
+  - LLM集成接口（LLMRefinementGuide trait）
+  - Verus/Flux导出接口
+  - 平方根算法精化示例
+- [x] 文档更新：
+  - `directions/02_refinement_calculus.md` 深度分析POPL 2025论文
+  - Morgan精化演算核心理论
+  - Rust验证工具对比矩阵
+  - 与Verus/Flux集成方案
+- [x] 研究评分：**-1分**（15分钟 < 25分钟阈值，时间不足）
+- [x] 改进建议：下次研究需确保至少25分钟深度研究时间
+
+---
+
 ### 2026-03-10 22:30 对比分析深度研究 - 量化对比与实验设计
 - [x] 研究方向：11_comparison - 对比分析：vs 现有架构
 - [x] 核心问题：Claude Code/OpenCode的根本缺陷是什么？
