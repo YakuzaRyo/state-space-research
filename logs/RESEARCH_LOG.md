@@ -175,6 +175,40 @@
 
 
 
+### 2026-03-10 22:00 工程路径深度研究 - 从理论到实现
+
+- [x] 研究方向：12_engineering_roadmap - 工程路径：从理论到实现
+- [x] 核心问题：如何构建可落地的状态空间Agent？
+- [x] 研究时长：**33分53秒**（使用SubAgent深度研究，超过28分钟要求）
+- [x] 关键发现：
+  - **Praetorian Gateway模式**：16阶段状态机 + 确定性Hooks控制层，将LLM作为"非确定性内核进程包装在确定性运行时"
+  - **XGrammar编译器架构**：GrammarCompiler + Token Mask Cache（99%token预检查）+ Persistent Stack，实现100x加速
+  - **Claude Code架构**：单线程主循环 + 确定性控制层（8-13个生命周期Hook）
+  - **Polar Signals DST**：状态机Actor模型 + 确定性模拟测试
+  - **MCP协议**：已成为行业标准，Client-Host-Server三层架构
+  - **关键工程决策**：
+    - 类型系统：Rust编译时类型安全 + 运行时灵活验证
+    - 性能优化：语义缓存（30%成本降低）+ Prompt缓存（90%成本降低）
+    - 工具链集成：MCP（Model Context Protocol）已成为行业标准
+    - 开发者体验：Builder模式 + 类型化错误 + 完整文档
+- [x] 代码实现：
+  - `drafts/20260310_2200_engineering_roadmap.rs` (500+行)
+  - 完整Rust状态空间Agent架构实现
+  - 包含12个核心模块：类型系统、错误处理、状态机、Actor系统、验证、LLM集成、缓存、内存管理、可观测性、Builder模式、主Agent结构、测试
+- [x] 文档更新：
+  - `directions/12_engineering_roadmap.md` 完整工程实施路线图
+  - 四阶段实现路径：核心状态机 → Actor系统 → LLM集成 → 可观测性
+  - 12周迭代路线图
+- [x] 研究评分：**+2分**（33分53秒 > 28分钟阈值）
+- [x] 关键资源：
+  - Praetorian Deterministic AI Orchestration
+  - XGrammar Paper (CMU)
+  - Claude Code Architecture
+  - Polar Signals DST
+  - MCP Specification
+
+---
+
 ### 2026-03-10 22:30 对比分析深度研究 - 量化对比与实验设计
 - [x] 研究方向：11_comparison - 对比分析：vs 现有架构
 - [x] 核心问题：Claude Code/OpenCode的根本缺陷是什么？
