@@ -1,149 +1,201 @@
-# 07_layered_design
-
-## 方向名称
-分层设计：四层确定性三明治架构
+# 07_layered_design - 分层设计研究
 
 ## 核心问题
-Syntax→Semantic→Pattern→Domain 如何转换?
+Syntax → Semantic → Pattern → Domain 四层如何转换?
 
-## 研究历程
+**研究日期**: 2026-03-10
+**研究重点**: 编译器架构实现 - 如何实现四层转换管道
 
-### 2026-03-09 14:00 深入研究
-**核心发现**: 
-通过分析编译器理论与抽象解释框架，发现现有LLM约束方案（XGrammar、Type-Constrained等）的关键缺陷：**它们仅在单一抽象层施加约束，缺乏层间转换的硬性边界**。
+## 研究结论
 
-**关键洞察**:
-**LLM应被视为"分层状态空间中的导航器"，而非"从噪声到信号的生成器"**。每一层提供闭合的操作集合，层间跃迁由编译器/类型系统强制执行，不存在提示工程导致的逃逸路径。
+### 四层架构设计（编译器实现）
 
-**四层确定性三明治架构**:
+基于Rust-Analyzer架构和RCL类型检查器的研究，实现完整的四层编译器管道：
+
+#### Layer 1: Syntax层 (语法层)
+- **职责**: 词法分析，将源代码转换为Token序列
+- **实现**: `Lexer` - 基于Peekable字符迭代器
+- **输出**: `Vec<Token>`
+- **关键设计**:
+  - 支持整数、浮点、字符串、布尔字面量
+  - 完整的运算符和关键字集合
+  - 注释跳过和错误处理
+
+#### Layer 2: Semantic层 (语义层)
+- **职责**: 语法分析，构建AST
+- **实现**: `RecursiveDescentParser` + `Parser Combinator` trait
+- **输出**: `Program` (包含函数、结构体、语句)
+- **关键设计**:
+  - 解析器组合子支持map/and_then/or/many/optional操作
+  - 递归下降处理复杂语法结构
+  - 表达式、语句、函数定义完整支持
+
+#### Layer 3: Pattern层 (模式层)
+- **职责**: 类型检查，过滤无效语义
+- **实现**: `TypeChecker` - 基于TypeEnv环境
+- **输出**: 类型验证通过的AST
+- **关键设计**:
+  - `check_expr`融合类型推断和检查（受RCL启发）
+  - `is_subtype_of`实现子类型关系
+  - `join`操作实现类型最小上界
+  - 环境栈支持嵌套作用域
+
+#### Layer 4: Domain层 (领域层)
+- **职责**: 代码生成，映射到目标语言
+- **实现**: `CodeGenerator` - 多目标代码模板
+- **输出**: Rust/Python/JavaScript代码
+- **关键设计**:
+  - 统一的AST遍历框架
+  - 目标特定的类型映射
+  - 模板化的代码生成
+
+### 层间转换机制
+
 ```
-L3 Domain (业务逻辑层)
-    ↑↓ [确定性DSL解释器]
-L2 Pattern (设计模式层) 
-    ↑↓ [确定性宏/模板展开]
-L1 Semantic (类型/语义层)
-    ↑↓ [确定性类型检查]
-L0 Syntax (Token序列层)
-    ↑↓ [确定性CFG解析]
+Source Code (String)
+    ↓ [Syntax Layer] Lexer::next_token()
+Token Stream (Vec<Token>)
+    ↓ [Semantic Layer] Parser Combinator map()
+AST (Program with Expr/Stmt/Function)
+    ↓ [Pattern Layer] TypeChecker::check_program()
+Validated AST (Type-safe)
+    ↓ [Domain Layer] CodeGenerator::generate()
+Target Code (Rust/Python/JS)
 ```
 
-**关键设计**:
-- **层内**: LLM作为导航器在受限子空间中选择路径（如选择哪个设计模式）
-- **层间**: 100%确定性转换，由编译期检查保证，LLM无法干预
-- **失败模式**: 无效层间转换在入口被拒绝（Parse Error/Type Error），绝不传递到下一层
+### 核心转换原理
 
-**与现有方案对比**:
-相比Claude Code的"生成后验证"，此架构将**验证成本从运行时移至编译期**，且LLM始终操作在"已验证的上下文"中，而非自由生成后修剪。
+1. **Syntax → Semantic: Parser Combinator转换**
+   ```rust
+   // map操作实现语法到语义转换
+   ident().map(|name| Expr::Var(name))
 
-**下一步研究方向**:
-1. 实现L0→L1的确定性桥梁：基于XGrammar扩展，构建从约束解码直接到类型化AST的零拷贝路径
-2. L2 Pattern库设计：研究常见算法模式的形式化规约，使LLM选择具备可证明的完备性
-3. 分层错误反馈机制：错误通过层级向上传播，在适当的抽象层进行修复尝试
-4. 与Praetorian架构集成：将Thin Agent置于L2层，Fat Platform覆盖L0/L1/L3
+   // and_then顺序组合
+   match_token(Token::Let)
+       .and_then(ident())
+       .map(|(_, name)| name)
+   ```
 
-**关键验证指标**: 测量LLM在分层架构中的"逃逸尝试率"，目标为0（理论上不可能）
+2. **Semantic → Pattern: 类型检查过滤器**
+   ```rust
+   // 类型检查作为过滤器
+   pub fn check_expr(&mut self, expr: &Expr) -> Result<Type, String>
 
-### 2026-03-10 14:30 深度研究：L2 Pattern层模式库设计
+   // 子类型检查
+   if !actual_type.is_subtype_of(&expected_type) {
+       return Err("Type mismatch".to_string());
+   }
+   ```
 
-**研究范围**: 使用SubAgent深度研究分层架构的Pattern层实现（~30分钟）
+3. **Pattern → Domain: 代码模板生成**
+   ```rust
+   // 目标特定的类型映射
+   fn rust_type(&self, type_: &Type) -> String {
+       match type_ {
+           Type::Int => "i64".to_string(),
+           Type::List(t) => format!("Vec<{}>", self.rust_type(t)),
+       }
+   }
+   ```
 
-**核心发现**：
-建立了完整的L2 Pattern层设计和实现：
+### 类型系统实现
 
-**Pattern库结构（30个核心模式覆盖80%场景）**:
-- 创建型 (5个): Builder, Factory, Singleton, Prototype, DI
-- 结构型 (7个): Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy
-- 行为型 (11个): Chain of Responsibility, Command, Iterator, Mediator, Memento,
-                 Observer, State, Strategy, Template Method, Visitor, Interpreter
-- 并发型 (6个): Channel, Mutex, RwLock, Atomic, ThreadPool, Actor
+```rust
+pub enum Type {
+    Int, Float, String, Bool, Void, Any,
+    List(Box<Type>),
+    Function(Box<Type>, Box<Type>),
+    Unknown,
+}
 
-**关键资源发现**:
-- **MLIR**: 通过"渐进式降级"实现多抽象层次，Dialect系统可借鉴
-- **LLM-A***: 使用LLM生成waypoint指导搜索，L2 Pattern层理论基础
-- **Cousot抽象解释**: Galois连接提供层间转换的数学基础
+impl Type {
+    // 子类型关系
+    pub fn is_subtype_of(&self, other: &Type) -> bool
 
-**代码实现**:
-- `drafts/20260310_1430_layered_pattern_library.rs` (343行)
-  - 8个核心模式实现，全部使用Typestate
-  - PatternSelector展示LLM受限选择空间
-  - TypeToPatterns实现L1→L2确定性映射
+    // 类型join（最小上界）
+    pub fn join(&self, other: &Type) -> Type
+}
+```
 
-**关键洞察**：
-- LLM选择空间比自由生成小3-5个数量级
-- 类型到模式映射: FunctionType→Strategy, DataType→Builder, EventType→Observer
+### 编译器管道
 
----
+```rust
+pub struct CompilerPipeline {
+    target: Target,  // Rust/Python/JavaScript
+}
 
-### 2026-03-09 初始化
-- 创建方向文档
+impl CompilerPipeline {
+    pub fn compile(&self, source: &str) -> Result<String, Vec<String>> {
+        // Step 1: Syntax Layer
+        let tokens = self.lex(source)?;
 
-## 关键资源
+        // Step 2: Semantic Layer
+        let ast = self.parse(&tokens)?;
 
-### 论文/理论
-- **Abstract Interpretation** (Cousot, POPL 1977) - 层间抽象转换的理论基础，Galois连接确保近似安全性
-- **CompCert Verified Compiler** - 多层IR转换的形式化验证路径
-- **XGrammar (MSR 2024)** - L0 Syntax层实现
-- **Type-Constrained Generation (ICLR 2025)** - L1 Semantic层实现
+        // Step 3: Pattern Layer
+        self.type_check(&ast)?;
 
-### 开源项目
-- **MLIR** - Multi-Level Intermediate Representation
-  - URL: https://mlir.llvm.org/
-  - 核心特性：渐进式降级、Dialect系统、多层IR统一表示
-  - 关键洞察：L0→L1→L2转换可借鉴MLIR的Dialect转换机制
+        // Step 4: Domain Layer
+        self.generate(&ast)
+    }
+}
+```
 
-- **Rust Type System** - 线性类型+所有权系统构成L1-L2层的硬性边界
+## 假设验证结果（2026-03-10编译器实现）
 
-## 架构洞察
+| 假设 | 验证结果 | 说明 |
+|------|----------|------|
+| H1: 解析器组合子可实现Syntax→Semantic转换 | **已验证** | Parser trait的map操作将Token流转换为AST节点，and_then/or/many组合子实现复杂语法结构解析 |
+| H2: 类型检查可作为Semantic→Pattern的过滤器 | **已验证** | TypeChecker通过check_expr方法过滤类型不匹配节点，TypeEnv维护作用域，is_subtype_of实现类型约束 |
+| H3: 代码模板可实现Pattern→Domain生成 | **已验证** | CodeGenerator通过目标特定模板（rust_type/python_type/js_type）生成多目标代码 |
 
-### 层间转换特质
-层间转换必须是**确定性**的，只有层内导航才允许LLM启发式搜索：
+### 验证实现细节
 
-| 层级 | LLM角色 | 确定性组件 |
-|------|---------|-----------|
-| L0 Syntax | 无（纯约束解码） | XGrammar CFG解析 |
-| L1 Semantic | 无（纯类型检查） | Rust类型系统 |
-| L2 Pattern | **导航器**（选择设计模式） | 模式匹配引擎 |
-| L3 Domain | 无（纯业务逻辑执行） | DSL解释器 |
+**H1验证 - Parser Combinator实现**:
+- 定义`Parser<T>` trait支持map/and_then/or/many/optional
+- `MapParser`实现Syntax→Semantic转换
+- `RecursiveDescentParser`构建完整AST
 
-### 与数据仓库架构类比
-数据仓库的ODS→DWD→DWS→ADS分层与状态空间架构高度同构：
-- 都是**渐进式精化**（原始→清洗→聚合→应用）
-- 都有**硬性边界**（Schema/类型约束）
-- 都支持**血缘追踪**（字段级依赖 vs 状态转换边）
-- 都具备**错误隔离**（分层故障不级联）
+**H2验证 - 类型检查过滤器**:
+- `TypeChecker::check_expr`融合推断和检查
+- `TypeEnv`支持嵌套作用域（通过parent链接）
+- `Type::join`实现类型最小上界
+- 错误收集机制支持多错误报告
 
-## 待验证假设
-- [x] L2 Pattern库的完备性（覆盖80%常见设计模式）
-  - 验证结果：定义了30个核心模式，覆盖创建型、结构型、行为型、并发型
-  - 代码实现：`drafts/20260310_1430_layered_pattern_library.rs`
+**H3验证 - 代码模板生成**:
+- `CodeGenerator`支持Rust/Python/JavaScript三目标
+- 统一的AST遍历框架
+- 目标特定的类型映射（如Type::Int→i64/int/number）
 
-- [ ] L0→L1零拷贝路径的可行性（避免生成后解析）
-  - 新思路：参考MLIR的Dialect转换机制，设计从XGrammar PDA到类型化AST的直接映射
+## 关键发现（基于编译器架构研究）
 
-- [x] 逃逸尝试率是否真正为0
-  - 初步验证：`drafts/20260310_1227_layered_sixlayer_integration.rs` 实现100%编译期捕获
-  - 待验证：在更复杂场景下的逃逸率
+### 发现1: Rust-Analyzer的Map-Reduce范式
+- 索引阶段（Syntax层）与完整分析（Semantic层）分离
+- 索引可增量更新，实现O(变更文件数)复杂度
+- 延迟解析类型，结果memoized缓存
 
-- [ ] LLM选择空间量化
-  - 验证方法：对比自由生成vs约束生成的输出空间大小
-  - 假设：比自由生成小3-5个数量级
+### 发现2: RCL类型检查器的融合设计
+- `check_expr`同时处理推断和检查
+- 自顶向下传递期望类型，实现精准错误定位
+- `TypeDiff`三态：Ok | Defer（运行时检查）| Error
 
-## 下一步研究方向
+### 发现3: Parser Combinator的转换能力
+- `map`操作天然支持Syntax→Semantic转换
+- `and_then`顺序组合对应语法规则的顺序
+- `or`选择组合支持备选语法路径
 
-1. **L0→L1零拷贝路径实现**
-   - 研究XGrammar PDA输出到Rust类型化AST的直接映射
-   - 参考MLIR Dialect转换设计状态空间Dialect
+### 发现4: 分层编译器的Pipe-Filter架构
+- 每层是独立的Filter，通过Pipe连接
+- 统一使用Result类型传递错误或结果
+- 支持多目标代码生成（Rust/Python/JS）
 
-2. **Pattern库形式化规约**
-   - 为30个核心模式编写形式化规约
-   - 研究模式组合的形式化验证
+## 实现文件
 
-3. **LLM导航器效率评估**
-   - 量化类型约束对LLM搜索效率的影响
-   - 对比约束生成vs自由生成的HumanEval得分
+- `drafts/20260310_1534_layered_compiler.rs` - 完整编译器实现（Lexer + Parser + TypeChecker + CodeGen）
 
-4. **分层错误反馈原型**
-   - 实现基于`thiserror`的分层错误类型系统
-   - 设计错误上下文传播机制
+## 下一步方向
 
-5. **参考 `07_data_warehouse_analogy.md`** 中的详细映射关系
+1. **增量编译**: 实现Rust-Analyzer风格的增量索引和缓存
+2. **泛型支持**: 扩展类型系统支持类型参数和约束
+3. **模式匹配**: 在Pattern层实现更多编译器优化（常量折叠、尾递归）
+4. **错误恢复**: 增强解析器的错误恢复能力，支持更多诊断信息
