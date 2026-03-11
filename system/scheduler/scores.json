@@ -1,5 +1,5 @@
 {
-  "total_score": 9,
+  "total_score": 8,
   "runs": [
     {
       "timestamp": "2026-03-10T09:13:00",
@@ -72,13 +72,45 @@
       "duration_seconds": 1680,
       "score": 1,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T09:36:00",
+      "task_id": "a6c9a4f49ee9a0392",
+      "direction": "工具设计",
+      "duration_seconds": 360,
+      "score": -1,
+      "level": "INSUFFICIENT"
+    },
+    {
+      "timestamp": "2026-03-11T09:49:00",
+      "task_id": "a153d9c91244fec78",
+      "direction": "Praetorian确定性架构",
+      "duration_seconds": 1980,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T09:56:00",
+      "task_id": "a50869fa2cd60cbc3",
+      "direction": "对比分析",
+      "duration_seconds": 600,
+      "score": -1,
+      "level": "INSUFFICIENT"
+    },
+    {
+      "timestamp": "2026-03-11T09:59:00",
+      "task_id": "aed565289bcab96cc",
+      "direction": "核心原则",
+      "duration_seconds": 540,
+      "score": -1,
+      "level": "INSUFFICIENT"
     }
   ],
   "stats": {
-    "total_runs": 9,
-    "excellent": 9,
+    "total_runs": 13,
+    "excellent": 11,
     "acceptable": 0,
-    "insufficient": 0,
-    "total_duration_seconds": 16680
+    "insufficient": 3,
+    "total_duration_seconds": 22260
   }
 }

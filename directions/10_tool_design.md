@@ -215,18 +215,37 @@
 
 ## 下一步研究方向
 
-1. **Rust CLI工具案例深度分析**
+### 基于本次研究的调整
+
+**优先级调整**：
+- ✅ 已验证：Newtype、Typestate、边界验证、类型安全Builder
+- 🔍 待验证：大型项目中的类型爆炸问题、性能基准测试
+
+**新增研究方向**：
+
+1. **Clap Derive与类型安全结合**
+   - 研究如何将验证逻辑集成到clap的value_parser中
+   - 实现从解析到验证的类型安全管道
+   - 时间：1周内
+
+2. **错误类型设计模式**
+   - 设计结构化的错误类型层次
+   - 实现用户友好的错误消息生成
+   - 时间：1周内
+
+### 原有方向（已调整优先级）
+
+3. **Rust CLI工具案例深度分析** [优先级：高]
    - 深入阅读ripgrep、fd、bat源代码
-   - 提取架构设计模式
+   - 重点关注Newtype和Typestate的实际使用
+   - 时间：2周内
 
-2. **Typestate模式在复杂CLI工作流中的应用**
-   - 研究多阶段命令的类型安全实现
-   - 探索命令依赖关系的编译期验证
-
-3. **Effect System在Rust CLI中的轻量级实现**
-   - 对比trait-based DI、Free Monad、Algebraic Effects
-   - 开发结合Typestate和Effect的CLI框架原型
-
-4. **六层边界的量化评估**
+4. **六层边界的量化评估** [优先级：中]
    - 定义度量指标：编译期错误捕获率、运行时错误率、代码复杂度
    - 在实际项目中对比应用六层边界前后的指标变化
+   - 时间：1个月内
+
+5. **Effect System在Rust CLI中的轻量级实现** [优先级：低]
+   - 对比trait-based DI、Free Monad、Algebraic Effects
+   - 开发结合Typestate和Effect的CLI框架原型
+   - 时间：3个月内
