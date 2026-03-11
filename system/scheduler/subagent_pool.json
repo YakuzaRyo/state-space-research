@@ -1,17 +1,7 @@
 {
   "active_agents": {
-    "a7f5dc112c99b3005": {
-      "direction": "04_deterministic_arch",
-      "started_at": "2026-03-11T18:12:00",
-      "is_deep_dive": true
-    },
     "ae674690d1d36912e": {
       "direction": "05_type_constraints",
-      "started_at": "2026-03-11T18:12:00",
-      "is_deep_dive": true
-    },
-    "a869944e52a72db15": {
-      "direction": "08_llm_as_navigator",
       "started_at": "2026-03-11T18:12:00",
       "is_deep_dive": true
     },
@@ -28,6 +18,16 @@
     "ad9bf281db5af6760": {
       "direction": "12_engineering_roadmap",
       "started_at": "2026-03-11T19:00:00",
+      "is_deep_dive": true
+    },
+    "a626ee2f4dfa6f93e": {
+      "direction": "02_refinement_calculus",
+      "started_at": "2026-03-11T19:15:00",
+      "is_deep_dive": true
+    },
+    "a56133f42c24add08": {
+      "direction": "09_rust_type_system",
+      "started_at": "2026-03-11T19:15:00",
       "is_deep_dive": true
     }
   },
@@ -53,6 +53,22 @@
       "direction": "01_core_principles",
       "completed_at": "2026-03-11T19:00:00",
       "duration_seconds": 514,
+      "score": -1,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a7f5dc112c99b3005",
+      "direction": "04_deterministic_arch",
+      "completed_at": "2026-03-11T19:15:00",
+      "duration_seconds": 594,
+      "score": -1,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a869944e52a72db15",
+      "direction": "08_llm_as_navigator",
+      "completed_at": "2026-03-11T19:15:00",
+      "duration_seconds": 644,
       "score": -1,
       "is_deep_dive": true
     },
@@ -405,8 +421,8 @@
   ],
   "stats": {
     "total_started": 56,
-    "total_completed": 49,
-    "total_score": 51
+    "total_completed": 51,
+    "total_score": 49
   },
   "scheduler": {
     "enabled": true,
