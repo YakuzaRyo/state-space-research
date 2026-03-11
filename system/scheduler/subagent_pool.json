@@ -2,6 +2,14 @@
   "active_agents": {},
   "completed_runs": [
     {
+      "agent_id": "a626ee2f4dfa6f93e",
+      "direction": "02_refinement_calculus",
+      "completed_at": "2026-03-11T20:30:00",
+      "duration_seconds": 873,
+      "score": -1,
+      "is_deep_dive": true
+    },
+    {
       "agent_id": "abc3331ef835ca7fc",
       "direction": "12_engineering_roadmap",
       "completed_at": "2026-03-11T19:00:00",
@@ -426,7 +434,7 @@
   ],
   "stats": {
     "total_started": 56,
-    "total_completed": 59,
+    "total_completed": 60,
     "total_score": 51
   },
   "scheduler": {
