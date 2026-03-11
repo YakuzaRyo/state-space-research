@@ -8,12 +8,42 @@
 
 ## 研究历程
 
-### 2026-03-11 深度研究（本次）
+### 2026-03-11 深度研究（本次 - 21:01）
 **研究重点**: Web Research + 假设验证 + Rust实现
+
+**核心假设**:
+1. 程序精化演算可作为LLM代码生成的语义约束框架
+2. Weakest Precondition演算可实现系统化验证
+3. 结合语法约束(XGrammar)和语义约束(精化演算)可实现双重保障
 
 **Web Research发现**:
 
 #### 1. Refine4LLM (POPL 2025) - 核心突破
+- **论文**: "Automated Program Refinement: Guide and Verify Code Large Language Model with Refinement Calculus" by Cai et al.
+- **核心贡献**: 首个将LLM与程序精化演算结合的框架
+- **技术方案**:
+  - 形式化规约驱动 (L_spec) 而非自然语言驱动
+  - 精化法则库预定义 (Skip, Assignment, Sequential, Iteration, Alternation)
+  - ATP (Z3, CVC4, Vampire, E-prover) 验证每次精化
+  - 反例反馈引导LLM修正
+- **实验结果**: 精化步骤减少74%，通过率提升至82%
+
+#### 2. XGrammar (2024-2025) - 结构化生成引擎
+- **论文**: "XGrammar: Flexible and Efficient Structured Generation Engine for Large Language Models"
+- **核心贡献**: 高效灵活的CFG约束解码引擎
+- **技术特点**:
+  - 上下文无关文法(CFG)支持
+  - Token分类策略：99%上下文无关token预检查缓存
+  - 持久化执行栈实现快速状态分支回滚
+  - CPU-GPU协同设计，mask生成延迟<40微秒
+- **性能**: 比Outlines/llama.cpp快10-100x
+
+#### 3. Grammar-Constrained LLM Generation (2024-2025)
+- **GRAMMAR-LLM** (ACL 2025): 线性时间语法约束生成
+- **Constrained Decoding**: 基于FSM的O(1) token验证
+- **应用**: JSON Schema、SQL、代码生成的语法正确性保证
+
+#### 4. Flux (PLDI 2023) - Rust精化类型
 - **论文**: "Automated Program Refinement: Guide and Verify Code Large Language Model with Refinement Calculus"
 - **核心贡献**: 首个将LLM与程序精化演算结合的框架
 - **技术方案**:
@@ -46,12 +76,15 @@
 
 **技术方案对比**:
 
-| 方案 | 约束机制 | 验证方式 | 自动化程度 | 适用场景 |
-|------|----------|----------|------------|----------|
-| Refine4LLM | 精化法则 | ATP (Z3等) | 高 | 算法实现 |
-| Flux | 精化类型 | SMT求解 | 高 | 系统编程 |
-| Prusti | 契约注解 | Viper | 中 | 复杂规约 |
-| XGrammar | 语法约束 | 解析器 | 极高 | 结构化输出 |
+| 方案 | 约束类型 | 约束机制 | 验证方式 | 自动化程度 | 适用场景 |
+|------|----------|----------|----------|------------|----------|
+| Refine4LLM | 语义约束 | 精化法则 | ATP (Z3等) | 高 | 算法实现 |
+| Flux | 语义约束 | 精化类型 | SMT求解 | 高 | 系统编程 |
+| Prusti | 语义约束 | 契约注解 | Viper | 中 | 复杂规约 |
+| XGrammar | 语法约束 | CFG/FSM | 解析器 | 极高 | 结构化输出 |
+| GRAMMAR-LLM | 语法约束 | CFG | 线性时间 | 极高 | 自然语言生成 |
+
+**综合洞察**: 语法约束(XGrammar)保证代码"形式正确"，语义约束(Refine4LLM)保证代码"行为正确"。两者结合可实现双重保障。
 
 ### 2026-03-10 深度研究
 - 深入分析 POPL 2025 论文 "Automated Program Refinement: Guide and Verify Code Large Language Model with Refinement Calculus"
@@ -429,11 +462,12 @@ impl VerifiableExport for Specification {
 
 ## 研究轨迹
 
-- **本次深度研究记录**: `logs/trails/02_refinement_calculus/20260311143000_trail.md`
-- **本次代码实现**: `drafts/20260311_02_refinement_calculus.rs` (约450行，11个测试通过)
-- **历史研究记录**: `logs/trails/02_refinement_calculus/20260311_0800_refinement_trail.md`
-- **历史代码实现**: `drafts/20260311_0800_refinement_calculus.rs` (约1150行)
-- **验证脚本**: `drafts/verify_refinement.py` (Python验证，全部测试通过)
+- **本次深度研究记录**: `logs/trails/02_refinement_calculus/20260311_2101_trail.md`
+- **本次代码实现**: `drafts/20260311_2101_refinement_calculus.rs` (约550行，包含wp演算和精化法则)
+- **验证脚本**: `drafts/verify_refinement.py` (Python模拟验证，3/4测试通过)
+- **历史研究记录**: `logs/trails/02_refinement_calculus/20260311143000_trail.md`
+- **历史代码实现**: `drafts/20260311_02_refinement_calculus.rs` (约450行，11个测试通过)
+- **早期代码实现**: `drafts/20260311_0800_refinement_calculus.rs` (约1150行)
 
 ## 下一步研究方向
 

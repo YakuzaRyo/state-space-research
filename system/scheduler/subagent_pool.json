@@ -5,11 +5,6 @@
       "started_at": "2026-03-11T21:01:00",
       "is_deep_dive": true
     },
-    "a69ef747f4b0b1cc1": {
-      "direction": "07_layered_design",
-      "started_at": "2026-03-11T21:30:00",
-      "is_deep_dive": true
-    },
     "a74fc4f15dcdf6ece": {
       "direction": "12_engineering_roadmap",
       "started_at": "2026-03-11T21:30:00",
@@ -29,9 +24,22 @@
       "direction": "11_comparison",
       "started_at": "2026-03-11T21:49:00",
       "is_deep_dive": true
+    },
+    "ab8379a445ba75bc2": {
+      "direction": "03_structured_generation",
+      "started_at": "2026-03-11T22:01:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a69ef747f4b0b1cc1",
+      "direction": "07_layered_design",
+      "completed_at": "2026-03-11T22:00:00",
+      "duration_seconds": 1680,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a99f78e7de2b62e89",
       "direction": "10_tool_design",
@@ -512,9 +520,9 @@
     }
   ],
   "stats": {
-    "total_started": 62,
-    "total_completed": 66,
-    "total_score": 58
+    "total_started": 63,
+    "total_completed": 67,
+    "total_score": 60
   },
   "scheduler": {
     "enabled": true,

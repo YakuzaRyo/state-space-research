@@ -1,5 +1,5 @@
 {
-  "total_score": 47,
+  "total_score": 48,
   "runs": [
     {
       "timestamp": "2026-03-11T14:25:00",
@@ -384,13 +384,20 @@
       "duration_seconds": 2100,
       "score": 1,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T13:24:10.981260",
+      "direction": "分层设计",
+      "duration_seconds": 1680,
+      "score": 1,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 51,
-    "excellent": 43,
+    "total_runs": 52,
+    "excellent": 44,
     "acceptable": 1,
     "insufficient": 8,
-    "total_duration_seconds": 119812
+    "total_duration_seconds": 121492
   }
 }
