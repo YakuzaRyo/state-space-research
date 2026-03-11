@@ -1,5 +1,5 @@
 {
-  "total_score": 39,
+  "total_score": 41,
   "runs": [
     {
       "timestamp": "2026-03-11T14:25:00",
@@ -328,13 +328,27 @@
       "duration_seconds": 1200,
       "score": -1,
       "level": "INSUFFICIENT"
+    },
+    {
+      "timestamp": "2026-03-11T16:00:00",
+      "direction": "核心原则(深入)",
+      "duration_seconds": 2100,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T16:00:00",
+      "direction": "Rust类型系统(深入)",
+      "duration_seconds": 1920,
+      "score": 2,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 42,
-    "excellent": 35,
+    "total_runs": 45,
+    "excellent": 37,
     "acceptable": 1,
-    "insufficient": 7,
-    "total_duration_seconds": 103242
+    "insufficient": 8,
+    "total_duration_seconds": 108462
   }
 }

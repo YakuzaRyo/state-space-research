@@ -1,20 +1,5 @@
 {
   "active_agents": {
-    "a6c81c857ac864661": {
-      "direction": "01_core_principles",
-      "started_at": "2026-03-11T14:26:00",
-      "is_deep_dive": true
-    },
-    "a6ea2f79d8b62ab61": {
-      "direction": "03_structured_generation",
-      "started_at": "2026-03-11T14:26:00",
-      "is_deep_dive": true
-    },
-    "a329986c88133cfc4": {
-      "direction": "09_rust_type_system",
-      "started_at": "2026-03-11T14:26:00",
-      "is_deep_dive": true
-    },
     "a7dbc7b501f8658b1": {
       "direction": "02_refinement_calculus",
       "started_at": "2026-03-11T15:46:00",
@@ -29,9 +14,48 @@
       "direction": "05_type_constraints",
       "started_at": "2026-03-11T15:46:00",
       "is_deep_dive": true
+    },
+    "a07fcd73f9b3090b4": {
+      "direction": "07_layered_design",
+      "started_at": "2026-03-11T16:00:00",
+      "is_deep_dive": true
+    },
+    "a5d26aa457cef95a4": {
+      "direction": "08_llm_as_navigator",
+      "started_at": "2026-03-11T16:00:00",
+      "is_deep_dive": true
+    },
+    "abc3331ef835ca7fc": {
+      "direction": "12_engineering_roadmap",
+      "started_at": "2026-03-11T16:00:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a6c81c857ac864661",
+      "direction": "01_core_principles",
+      "completed_at": "2026-03-11T16:00:00",
+      "duration_seconds": 2100,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a6ea2f79d8b62ab61",
+      "direction": "03_structured_generation",
+      "completed_at": "2026-03-11T16:00:00",
+      "duration_seconds": 1200,
+      "score": -1,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a329986c88133cfc4",
+      "direction": "09_rust_type_system",
+      "completed_at": "2026-03-11T16:00:00",
+      "duration_seconds": 1920,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "af0e5d80e720a6645",
       "direction": "06_formal_verification",
@@ -316,9 +340,9 @@
     }
   ],
   "stats": {
-    "total_started": 45,
-    "total_completed": 38,
-    "total_score": 41
+    "total_started": 48,
+    "total_completed": 41,
+    "total_score": 44
   },
   "scheduler": {
     "enabled": true,
