@@ -1,18 +1,8 @@
 {
   "active_agents": {
-    "ae1f314f7d7d8bdfd": {
-      "direction": "02_refinement_calculus",
-      "started_at": "2026-03-11T21:01:00",
-      "is_deep_dive": true
-    },
     "a74fc4f15dcdf6ece": {
       "direction": "12_engineering_roadmap",
       "started_at": "2026-03-11T21:30:00",
-      "is_deep_dive": true
-    },
-    "a00338fc8963af663": {
-      "direction": "05_type_constraints",
-      "started_at": "2026-03-11T21:34:00",
       "is_deep_dive": true
     },
     "a21e1db644a147ee9": {
@@ -29,9 +19,35 @@
       "direction": "03_structured_generation",
       "started_at": "2026-03-11T22:01:00",
       "is_deep_dive": true
+    },
+    "a0c659e655975f51b": {
+      "direction": "01_core_principles",
+      "started_at": "2026-03-11T22:05:00",
+      "is_deep_dive": true
+    },
+    "a193dc92628b8a9e1": {
+      "direction": "07_layered_design",
+      "started_at": "2026-03-11T22:05:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a00338fc8963af663",
+      "direction": "05_type_constraints",
+      "completed_at": "2026-03-11T22:05:00",
+      "duration_seconds": 2400,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "ae1f314f7d7d8bdfd",
+      "direction": "02_refinement_calculus",
+      "completed_at": "2026-03-11T22:05:00",
+      "duration_seconds": 1389,
+      "score": 0,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a69ef747f4b0b1cc1",
       "direction": "07_layered_design",
@@ -520,9 +536,9 @@
     }
   ],
   "stats": {
-    "total_started": 63,
-    "total_completed": 67,
-    "total_score": 60
+    "total_started": 65,
+    "total_completed": 69,
+    "total_score": 62
   },
   "scheduler": {
     "enabled": true,
