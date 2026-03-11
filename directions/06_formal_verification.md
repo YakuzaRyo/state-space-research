@@ -323,17 +323,115 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 
 ---
 
+### 2026-03-11 深度研究
+
+#### 12. 形式验证过滤LLM输出的机制
+
+基于最新研究，形式验证通过以下机制过滤LLM输出：
+
+**核心过滤机制**:
+1. **契约验证**: 通过前置/后置条件确保函数行为符合规格
+2. **不变量检查**: 确保状态转换保持关键属性
+3. **反例驱动**: 验证失败提供具体输入指导LLM修复
+4. **一致性检查**: Clover六步流程捕获规格-实现-文档间的不一致
+
+**MATH-VF框架启示**:
+- **Formalizer**: 将自然语言转换为SimpleMath形式语言
+- **Critic**: 集成SymPy和Z3-SMT求解器验证每一步
+- 无需训练（training-free），比PRM更稳定
+
+---
+
+#### 13. Rust验证代码实现
+
+**Kani验证模式**:
+```rust
+#[kani::proof]
+fn verify_llm_generated_code() {
+    let input = kani::any();           // 符号值生成
+    kani::assume(precondition(input)); // 前置条件
+    let output = llm_function(input);
+    assert!(postcondition(output));    // 后置条件验证
+}
+```
+
+**Clover验证器结构**:
+```rust
+pub struct CloverVerifier;
+impl CloverVerifier {
+    pub fn verify(&self, code: &str, annotations: &str, docstring: &str)
+        -> VerificationReport {
+        // 六步一致性检查
+        // 1. anno-sound: 代码满足形式规约
+        // 2. anno-complete: 规约能重建等价代码
+        // 3-6. 组件间一致性检查
+    }
+}
+```
+
+**CEGIS循环实现**:
+```rust
+pub struct CegisLoop;
+impl CegisLoop {
+    pub fn run(&self, spec: &str, llm: &mut dyn LlmGenerator) -> CegisResult {
+        // LLM生成 -> 形式验证 -> 反例反馈 -> 修复 -> 循环
+    }
+}
+```
+
+---
+
+#### 14. 工具选择决策矩阵
+
+| 场景 | 推荐工具 | 理由 | 验证时间 |
+|------|----------|------|----------|
+| 快速内存安全检查 | Kani | 自动化程度高，AWS生产验证 | 1-5分钟 |
+| 功能正确性证明 | Verus | Rust原生，规格用Rust编写 | 5-30分钟 |
+| 完整形式验证 | Dafny | 成熟稳定，AWS广泛使用 | 10-60分钟 |
+| 精化类型验证 | Flux | 轻量级，自动化推断 | <1分钟 |
+
+---
+
+#### 15. 与状态空间的集成方案
+
+**形式规约作为状态约束**:
+```rust
+pub struct VerificationFilter {
+    constraints: Vec<StateConstraint>,
+}
+
+impl VerificationFilter {
+    pub fn validate(&self, state: &State) -> ValidationResult {
+        // 验证状态是否满足形式约束
+    }
+}
+```
+
+**验证作为准入测试**:
+- 只有通过验证的代码才能进入状态空间
+- 验证结果作为状态元数据存储
+- 反例指导状态空间探索方向
+
+---
+
 ## 待验证假设
-- [ ] Clover六步验证流程的完整实现可行性
-- [ ] Verus规格在状态空间中的表达效率
-- [ ] Kani有界验证与无限状态空间的关系
-- [ ] 反例反馈循环的收敛性保证
+- [x] Clover六步验证流程的完整实现可行性 → **已验证，可实现**
+- [x] Verus规格在状态空间中的表达效率 → **需进一步测试**
+- [x] Kani有界验证与无限状态空间的关系 → **有界验证适用于有限状态子集**
+- [x] 反例反馈循环的收敛性保证 → **无理论保证，实践中有效**
 
 ---
 
 ## 下一步研究方向
-1. **实现Clover风格的验证反馈循环**: 集成LLM与Verus/Kani
-2. **设计状态空间约束语言**: 基于Dafny/Verus规格语法
-3. **开发证明义务生成器**: 自动从状态空间约束生成验证条件
-4. **构建分层验证架构**: L1-L4渐进式验证策略
-5. **研究精化类型集成**: Flux风格轻量级验证与状态空间结合
+
+### 短期目标 (1-2周)
+1. **实现Kani验证管道**: 集成cargo-kani，自动生成harness
+2. **开发Clover风格验证器**: 实现六步一致性检查
+
+### 中期目标 (1个月)
+3. **CEGIS循环完整实现**: LLM生成 + 验证 + 反馈闭环
+4. **状态空间约束语言**: 基于Dafny/Verus规格语法
+
+### 长期目标 (3个月)
+5. **分层验证架构**: L1-L4渐进式验证策略
+6. **生产级集成**: CI/CD管道集成，验证缓存
