@@ -393,6 +393,8 @@ Source Code
 - **v3验证**: `drafts/20260311_layered_design_validation.py`
 - **研究轨迹**: `logs/trails/07_layered_design/20260311_1000_layered_v2_trail.md`
 - **本次轨迹**: `logs/trails/07_layered_design/20260311_1700_layered_v3_trail.md`
+- **v4实现**: `drafts/20260311_2130_layered_design.rs` (Pattern trait和DSL构造器)
+- **v4轨迹**: `logs/trails/07_layered_design/20260311_2130_trail.md`
 
 ---
 
@@ -427,3 +429,85 @@ Source Code
 - v3: Typestate Pattern和转换管道
 
 每一轮都在抽象层次、类型安全、代码组织等方面有所提升，验证了持续深入研究的价值。
+
+---
+
+## v4补充: Pattern Trait与DSL构造器 (2026-03-11)
+
+### 核心创新
+
+第四轮研究引入了**Pattern Trait**和**DSL构造器**，实现了更灵活的分层转换：
+
+```rust
+pub trait Pattern: Sized {
+    type Input;
+    type Output;
+    fn apply(&self, input: Self::Input) -> Self::Output;
+    fn compose<P: Pattern<Input = Self::Output>>(self, other: P) -> ComposedPattern<Self, P>;
+}
+```
+
+**优势**：
+- 模式可组合：通过`compose`方法构建复杂工作流
+- 类型安全：输入输出类型在编译期确定
+- 零运行时开销：泛型单态化
+
+### DSL构造器设计
+
+```rust
+pub struct DslBuilder<Context> {
+    context: Context,
+    patterns: Vec<Box<dyn Fn(&Context, Type) -> Type>>,
+}
+
+impl<Context> DslBuilder<Context> {
+    pub fn with_pattern<F>(mut self, pattern: F) -> Self
+    where F: Fn(&Context, Type) -> Type + 'static;
+
+    pub fn build(&self, base: Type) -> Type {
+        self.patterns.iter().fold(base, |ty, pat| pat(&self.context, ty))
+    }
+}
+```
+
+### 验证结果
+
+```bash
+$ rustc --edition 2021 --test layered_design.rs -o test.exe && ./test.exe
+running 8 tests
+test test_constraint_checking ... ok
+test test_dsl_builder ... ok
+test test_domain_compiler ... ok
+test test_domain_data_pipeline ... ok
+test test_pattern_composition ... ok
+test test_pattern_layer ... ok
+test test_semantic_layer ... ok
+test test_syntax_layer ... ok
+
+test result: ok. 8 passed; 0 failed
+```
+
+### 四层转换流程（v4）
+
+```
+Source Code
+     ↓
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   SYNTAX    │ →  │  SEMANTIC   │ →  │   PATTERN   │ →  │   DOMAIN    │
+│   LAYER     │    │   LAYER     │    │   LAYER     │    │   LAYER     │
+├─────────────┤    ├─────────────┤    ├─────────────┤    ├─────────────┤
+│  • Token    │    │  • Type     │    │  • Pattern  │    │  • DSL      │
+│  • AST Node │    │  • Scope    │    │  • Compose  │    │  • Pipeline │
+│  • Parse    │    │  • Constraint│   │  • Transform│    │  • Rules    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+     ↑                    ↑                  ↑                 ↑
+   结构表示            意义赋予            抽象复用          领域特化
+```
+
+### 关键发现
+
+1. **分层边界清晰**: 每层有明确职责，通过trait和类型系统强制执行边界
+2. **模式组合能力**: Pattern层的组合机制允许构建复杂工作流
+3. **零成本抽象**: Rust的泛型和monomorphization确保分层不引入运行时开销
+4. **双向约束传播**: Domain层需求向下传播为Semantic层约束，Syntax层限制向上影响表达能力
+5. **DSL友好**: 该架构天然支持DSL构建，每层可独立扩展
