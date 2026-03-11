@@ -119,6 +119,99 @@ H5: 前缀属性(Prefix Property)是LLM解码的关键要求
 
 ---
 
+### 2026-03-11 第三次深度研究 (当前)
+**研究重点**: 类型系统指导代码生成的三种核心机制实现与验证
+
+#### 核心发现
+
+**1. 三种类型指导代码生成机制**
+
+| 机制 | 原理 | 应用场景 |
+|------|------|----------|
+| **Typestate模式** | 泛型参数编码运行时状态 | HTTP构建器、状态机 |
+| **Const Generics** | 编译时常量参数化 | 矩阵运算、固定大小容器 |
+| **Trait约束驱动** | Trait bounds指导泛型实现 | 序列化、抽象接口 |
+
+**2. Typestate模式 - HTTP构建器实现**
+
+```rust
+pub struct HttpRequestBuilder<State> {
+    url: Option<String>,
+    method: Option<String>,
+    body: Option<String>,
+    _state: PhantomData<State>,
+}
+
+// 状态链: Uninitialized -> UrlSet -> MethodSet -> BodySet
+// 编译时保证: 必须先设置URL，再设置方法，最后发送
+let response = HttpRequestBuilder::new()
+    .url("https://api.example.com")  // 返回 HttpRequestBuilder<UrlSet>
+    .method("POST")                   // 返回 HttpRequestBuilder<MethodSet>
+    .body("{}")                       // 返回 HttpRequestBuilder<BodySet>
+    .send();                          // 只有 BodySet/MethodSet 可调用
+```
+
+**3. Const Generics - 编译时维度安全矩阵**
+
+```rust
+pub struct Matrix<T, const ROWS: usize, const COLS: usize> {
+    data: [[T; COLS]; ROWS],
+}
+
+// 矩阵乘法: (M×N) * (N×P) = (M×P)
+// 类型系统自动推导输出维度
+impl<T, const M: usize, const N: usize, const P: usize>
+    Mul<Matrix<T, N, P>> for Matrix<T, M, N> {
+    type Output = Matrix<T, M, P>;  // 编译时维度检查
+}
+```
+
+**4. Trait约束驱动 - 递归序列化生成**
+
+```rust
+pub trait ToJson {
+    fn to_json(&self) -> String;
+}
+
+// 为 Vec<T> 实现，要求 T: ToJson
+impl<T: ToJson> ToJson for Vec<T> {
+    fn to_json(&self) -> String {
+        // 递归调用 T::to_json()
+    }
+}
+
+// 宏根据结构体字段生成实现
+impl_to_json!(Person { name, age, active });
+```
+
+#### 验证结果
+
+- [x] `cargo check` 通过（仅警告，无错误）
+- [x] `cargo test` 通过（8/8 测试通过）
+
+测试覆盖:
+1. `test_typestate_http_builder` - HTTP构建器基础流程
+2. `test_typestate_http_with_body` - 带请求体的POST流程
+3. `test_const_generics_matrix` - 矩阵乘法的维度正确性
+4. `test_matrix_transpose` - 转置操作的维度交换
+5. `test_trait_driven_json` - 结构体JSON序列化
+6. `test_json_vec_serialization` - Vec递归序列化
+7. `test_type_level_state_machine` - 类型级状态机完整流程
+8. `test_state_machine_alternate_path` - 状态机分支路径
+
+#### 产出代码
+- `drafts/20260311_05_type_constraints.rs` - 完整实现(587行,含8个测试)
+- 包含4个模块：typestate_http, const_generics_matrix, trait_driven_serialization, type_level_state_machine
+
+#### 关键结论
+1. **类型即规范**: 类型定义本身就是代码生成的规范，编译器强制执行
+2. **零成本抽象**: PhantomData和类型参数在运行时无开销
+3. **错误前置**: 运行时状态错误转化为编译时类型错误
+4. **可组合性**: 类型约束可以组合，构建复杂的安全保证
+5. **IDE友好**: 类型状态模式使自动补全只显示当前状态可用方法
+
+---
+
 ### 2026-03-11 第二次深度研究 (11:51-12:05)
 **研究重点**: Rust类型系统指导代码生成的具体机制实现
 

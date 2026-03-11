@@ -1,0 +1,2 @@
+<_::<impl Deserialize<'de> for HookOutcome>::deserialize::__Visitor<'de> as Visitor<'de>>::visit_enum::__Field
+<_::<impl Deserialize<'de> for Payload>::deserialize::__Visitor<'de> as Visitor<'de>>::visit_enum::__Field

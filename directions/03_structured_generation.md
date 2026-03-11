@@ -505,11 +505,65 @@ pub mod type_state {
 8. **增量编译**: 支持grammar的动态更新
 
 ## 代码草稿
+- [drafts/20260311_1155_structured_generation.rs](../drafts/20260311_1155_structured_generation.rs) - 第五轮深入研究 - Token级别约束核心机制 (约500行)
 - [drafts/20260311_structured_gen_v3.rs](../drafts/20260311_structured_gen_v3.rs) - 第四轮深入研究 - XGrammar核心Rust实现验证 (1934行)
 - [drafts/20260311_结构化生成.rs](../drafts/20260311_结构化生成.rs) - 第三轮深入研究 - XGrammar 2完整实现 (约600行)
 - [drafts/20260311_1000_structured_gen_v2.rs](../drafts/20260311_1000_structured_gen_v2.rs) - 第二轮深入研究 (1918行)
 - [drafts/20260310_1431_structured_generation.rs](../drafts/20260310_1431_structured_generation.rs) - XGrammar核心Rust实现
 - [drafts/20260310_1750_structured_generation.rs](../drafts/20260310_1750_structured_generation.rs) - PDA约束生成验证
+
+### 2026-03-11 11:55 第五轮深入研究 (v4: Token级别约束核心)
+**研究范围**: Token级别约束LLM输出的核心机制研究
+
+#### 技术假设 (H1-H4)
+
+| 假设 | 内容 | 置信度 |
+|------|------|--------|
+| H1 | PDA可在token级别强制执行CFG约束 | 高 |
+| H2 | Token分类(99%/1%)可实现高效缓存 | 高 |
+| H3 | 字节级PDA解决不规则token边界 | 高 |
+| H4 | Token Mask Cache开销<40μs/token | 中-高 |
+
+#### Web Research关键发现
+
+**XGrammar核心创新**:
+1. **Token分类策略**: 上下文无关(>99%) vs 上下文相关(<1%)
+2. **自适应Mask缓存**: 160MB → 0.46MB (Llama-3.1)
+3. **字节级PDA**: 处理不规则token边界
+4. **持久执行栈**: O(1)回滚支持
+
+**性能数据**:
+- Token Mask生成: < 40μs
+- 相比传统方案: 100x加速
+- H100端到端: 80x加速
+
+**Outlines对比**:
+- FSM-based约束解码
+- 仅支持正则语言
+- 无法处理嵌套结构
+
+#### 代码实现 (约500行Rust)
+
+**核心模块**:
+1. `TokenClassifier` - Token分类器
+2. `DynamicBitset` - 高效token掩码存储 (128K→16KB)
+3. `Grammar` - EBNF语法表示
+4. `PushdownAutomaton` - PDA执行引擎
+5. `PersistentStack` - 持久栈O(1)回滚
+6. `AdaptiveTokenMaskCache` - 自适应缓存
+7. `ConstraintGenerator` - 约束生成器主API
+
+#### 约束解码 vs 传统方法
+
+```
+传统方法: 生成 → 验证 → 重试 (概率性)
+约束解码: 掩码 → 生成 (确定性)
+```
+
+#### 轨迹日志
+- [logs/trails/03_structured_generation/20260311_1155_trail.md](logs/trails/03_structured_generation/20260311_1155_trail.md)
+
+---
 
 ### 2026-03-11 11:25 第四轮深入研究 (v3验证)
 **研究范围**: XGrammar核心机制Rust实现验证
@@ -571,4 +625,5 @@ drafts/structured_gen_v3/
 **总代码量**: 1934行Rust代码
 
 #### 轨迹日志
+- [logs/trails/03_structured_generation/20260311_1155_trail.md](logs/trails/03_structured_generation/20260311_1155_trail.md) - 第五轮深入研究
 - [logs/trails/03_structured_generation/20260311_1125_structured_v3_trail.md](logs/trails/03_structured_generation/20260311_1125_structured_v3_trail.md)

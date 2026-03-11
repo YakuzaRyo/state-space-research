@@ -430,9 +430,10 @@ impl VerifiableExport for Specification {
 ## 研究轨迹
 
 - **本次深度研究记录**: `logs/trails/02_refinement_calculus/20260311143000_trail.md`
-- **本次代码实现**: `drafts/20260311143000_refinement_calculus.rs` (约450行，11个测试通过)
+- **本次代码实现**: `drafts/20260311_02_refinement_calculus.rs` (约450行，11个测试通过)
 - **历史研究记录**: `logs/trails/02_refinement_calculus/20260311_0800_refinement_trail.md`
 - **历史代码实现**: `drafts/20260311_0800_refinement_calculus.rs` (约1150行)
+- **验证脚本**: `drafts/verify_refinement.py` (Python验证，全部测试通过)
 
 ## 下一步研究方向
 

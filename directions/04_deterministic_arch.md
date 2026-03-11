@@ -388,8 +388,35 @@ Phase 8: Implementation → Phase 16: Completion
   - 16阶段状态机实现
   - 完整测试套件(18个测试用例)
 
-- [ ] H14: 确定性执行在分布式场景下的一致性保证
-- [ ] H15: AI生成代码的漏洞检测自动化可行性
+### 2026-03-11 深度研究：Rust确定性状态机实现
+- **Web Research**: 研究Rust确定性状态机架构模式
+  - [Deterministic Simulation Testing in Rust](https://www.polarsignals.com/blog/posts/2025/07/08/dst-rust)
+  - [Rust and the most elegant FSM](https://bluejekyll.github.io/blog/posts/rust-and-the-most-elegant-fsm/)
+  - [Deterministic simulation testing for async Rust](https://s2.dev/blog/dst)
+
+- **关键发现**:
+  1. **StateMachine Trait设计**: `receive()`处理消息，`tick()`处理时间，所有副作用通过消息返回
+  2. **Message Bus模式**: 中央Director控制所有状态机的执行顺序、时间、随机性和故障注入
+  3. **确定性四要素**: 单线程执行、种子化RNG、无物理时钟、模拟I/O
+  4. **Thin Agent实现**: <150行代码，纯函数执行，状态外部化
+  5. **Fat Platform职责**: 编排、内存、Hook、技能管理
+
+- **假设验证**:
+  - **H14 (Rust状态机可实现确定性Agent)**: **已验证** - 实现通过编译和测试
+  - **H15 (消息传递架构可行)**: **已验证** - Message/Payload类型系统完整
+  - **H16 (两层技能系统可编码)**: **已验证** - SkillRegistry实现Core + Library分层
+
+- **代码实现**: `drafts/20260311120224_04_deterministic_arch.rs`
+  - `StateMachine` trait: 确定性状态机核心抽象
+  - `ThinAgent` trait: 轻量级Agent接口
+  - `Message`/`Payload`: 类型化消息系统
+  - `Skill`/`SkillRegistry`: 两层技能系统
+  - `Platform`: 胖平台实现
+  - `Hook`: 外部强制执行机制
+  - 6个单元测试全部通过
+
+- [ ] H17: 确定性执行在分布式场景下的一致性保证
+- [ ] H18: AI生成代码的漏洞检测自动化可行性
 
 ## 下一步研究方向
 
