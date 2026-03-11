@@ -1,5 +1,36 @@
 {
-  "active_agents": {},
+  "active_agents": {
+    "a7358cf043e221e90": {
+      "direction": "01_core_principles",
+      "started_at": "2026-03-11T21:01:00",
+      "is_deep_dive": true
+    },
+    "ae1f314f7d7d8bdfd": {
+      "direction": "02_refinement_calculus",
+      "started_at": "2026-03-11T21:01:00",
+      "is_deep_dive": true
+    },
+    "a4c7c25ac3690cb4b": {
+      "direction": "03_structured_generation",
+      "started_at": "2026-03-11T21:01:00",
+      "is_deep_dive": true
+    },
+    "ad117f13a6183decd": {
+      "direction": "04_deterministic_arch",
+      "started_at": "2026-03-11T21:01:00",
+      "is_deep_dive": true
+    },
+    "a80a8946aec9d224b": {
+      "direction": "08_llm_as_navigator",
+      "started_at": "2026-03-11T21:01:00",
+      "is_deep_dive": true
+    },
+    "afcda74f49159a170": {
+      "direction": "09_rust_type_system",
+      "started_at": "2026-03-11T21:01:00",
+      "is_deep_dive": true
+    }
+  },
   "completed_runs": [
     {
       "agent_id": "a626ee2f4dfa6f93e",
