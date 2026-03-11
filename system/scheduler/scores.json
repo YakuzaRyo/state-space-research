@@ -1,5 +1,5 @@
 {
-  "total_score": 12,
+  "total_score": 16,
   "runs": [
     {
       "timestamp": "2026-03-10T09:13:00",
@@ -144,13 +144,29 @@
       "duration_seconds": 1680,
       "score": 2,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T11:25:00",
+      "task_id": "a193449a1d57e8bfa",
+      "direction": "分层设计(深入)",
+      "duration_seconds": 4200,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T11:25:00",
+      "task_id": "aa6c7295ea6d37b4a",
+      "direction": "类型约束生成(深入)",
+      "duration_seconds": 1620,
+      "score": 2,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 18,
-    "excellent": 16,
+    "total_runs": 20,
+    "excellent": 18,
     "acceptable": 0,
     "insufficient": 3,
-    "total_duration_seconds": 32520
+    "total_duration_seconds": 38340
   }
 }

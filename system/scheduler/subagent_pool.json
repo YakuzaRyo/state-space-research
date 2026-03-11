@@ -1,15 +1,5 @@
 {
   "active_agents": {
-    "a193449a1d57e8bfa": {
-      "direction": "07_layered_design",
-      "started_at": "2026-03-11T10:15:00",
-      "is_deep_dive": true
-    },
-    "aa6c7295ea6d37b4a": {
-      "direction": "05_type_constraints",
-      "started_at": "2026-03-11T10:58:00",
-      "is_deep_dive": true
-    },
     "a6ea56cc5c4621fc8": {
       "direction": "08_llm_as_navigator",
       "started_at": "2026-03-11T11:00:00",
@@ -29,9 +19,35 @@
       "direction": "04_deterministic_arch",
       "started_at": "2026-03-11T11:20:00",
       "is_deep_dive": true
+    },
+    "adc8a76f9e309fd01": {
+      "direction": "01_core_principles",
+      "started_at": "2026-03-11T11:27:00",
+      "is_deep_dive": true
+    },
+    "acd3c7a3af09f2849": {
+      "direction": "11_comparison",
+      "started_at": "2026-03-11T11:27:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a193449a1d57e8bfa",
+      "direction": "07_layered_design",
+      "completed_at": "2026-03-11T11:25:00",
+      "duration_seconds": 4200,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "aa6c7295ea6d37b4a",
+      "direction": "05_type_constraints",
+      "completed_at": "2026-03-11T11:25:00",
+      "duration_seconds": 1620,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "ab6af3fe58b6b3da",
       "direction": "10_tool_design",
@@ -116,9 +132,9 @@
     }
   ],
   "stats": {
-    "total_started": 17,
-    "total_completed": 10,
-    "total_score": 18
+    "total_started": 19,
+    "total_completed": 12,
+    "total_score": 22
   },
   "scheduler": {
     "enabled": true,
