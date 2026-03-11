@@ -1,5 +1,5 @@
 {
-  "total_score": 44,
+  "total_score": 46,
   "runs": [
     {
       "timestamp": "2026-03-11T14:25:00",
@@ -363,13 +363,27 @@
       "duration_seconds": 1690,
       "score": 1,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T13:14:56.648071",
+      "direction": "结构化生成",
+      "duration_seconds": 1840,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T13:18:17.324419",
+      "direction": "核心原则",
+      "duration_seconds": 2280,
+      "score": 1,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 48,
-    "excellent": 40,
+    "total_runs": 50,
+    "excellent": 42,
     "acceptable": 1,
     "insufficient": 8,
-    "total_duration_seconds": 113592
+    "total_duration_seconds": 117712
   }
 }

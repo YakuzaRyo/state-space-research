@@ -1,10 +1,5 @@
 {
   "active_agents": {
-    "a7358cf043e221e90": {
-      "direction": "01_core_principles",
-      "started_at": "2026-03-11T21:01:00",
-      "is_deep_dive": true
-    },
     "ae1f314f7d7d8bdfd": {
       "direction": "02_refinement_calculus",
       "started_at": "2026-03-11T21:01:00",
@@ -29,9 +24,22 @@
       "direction": "05_type_constraints",
       "started_at": "2026-03-11T21:34:00",
       "is_deep_dive": true
+    },
+    "a21e1db644a147ee9": {
+      "direction": "06_formal_verification",
+      "started_at": "2026-03-11T21:41:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a7358cf043e221e90",
+      "direction": "01_core_principles",
+      "completed_at": "2026-03-11T21:40:00",
+      "duration_seconds": 2280,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a4c7c25ac3690cb4b",
       "direction": "03_structured_generation",
@@ -496,9 +504,9 @@
     }
   ],
   "stats": {
-    "total_started": 60,
-    "total_completed": 64,
-    "total_score": 55
+    "total_started": 61,
+    "total_completed": 65,
+    "total_score": 57
   },
   "scheduler": {
     "enabled": true,

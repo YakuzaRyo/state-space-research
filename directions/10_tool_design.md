@@ -8,6 +8,68 @@
 
 ## 研究历程
 
+### 2026-03-11 21:30 深度研究v5：Poka-yoke防错设计与Rust编译期机制
+
+**研究范围**: Web Research + 假设验证 + 代码实现（~35分钟目标）
+
+**核心问题**: 如何设计'无法产生错误'的工具?
+
+**Web Research发现**:
+
+1. **Poka-Yoke (防错设计) 六原则**（来源：[ASQ Mistake-Proofing](https://asq.org/quality-resources/mistake-proofing)）
+   - Elimination: 消除错误可能性（类型系统消除非法状态）
+   - Replacement: 用可靠替代方案（内存安全语言替代C/C++）
+   - Prevention: 内建错误防护（编译期检查）
+   - Facilitation: 让正确操作最简单（API设计引导）
+   - Detection: 即时检测错误（IDE实时反馈）
+   - Mitigation: 减轻错误影响（错误恢复机制）
+
+2. **Rust编译器错误检查机制**（来源：[How Rust Helps You Prevent Bugs](https://polyfloyd.net/post/how-rust-helps-you-prevent-bugs/)）
+   - Ownership系统：每个值有唯一所有者，自动释放
+   - Borrow Checker：在MIR层级检查，防止同时存在可变和不可变引用
+   - Send/Sync Traits：编译期保证线程安全
+   - 强制初始化：拒绝编译未初始化变量
+   - Option/Result：强制处理空值和错误
+
+3. **安全编程工具**（来源：[Static Code Analysis](https://www.splunk.com/en_us/blog/learn/static-code-analysis.html)）
+   - 静态代码分析在编译期检测漏洞
+   - AddressSanitizer/MemorySanitizer内存安全检测
+   - 类型安全路由在编译期防止URL错误
+
+**验证的假设**：
+
+| 假设 | 验证结果 | 关键证据 |
+|------|----------|----------|
+| **H1**: 类型即约束 | 验证 | 非法状态在类型系统中不可表示 |
+| **H2**: 编译期强制 > 运行时检查 | 验证 | Rust borrow checker在编译期消除内存错误 |
+| **H3**: 错误预防三层架构 | 验证 | 语法层+类型层+API层协同工作 |
+| **H4**: 消耗性设计(Linear Types) | 验证 | AuthToken只能authenticate一次 |
+| **H5**: 类型状态机强制正确顺序 | 验证 | FileProcessor<Closed>→Opened→Reading→Parsed |
+| **H6**: RAII自动资源管理 | 验证 | DatabaseConnection自动drop |
+
+**代码实现**: `drafts/20260311_2130_tool_design.rs` (400+行)
+- 类型状态机验证 (FileProcessor<Closed/Opened/Reading/Parsed>)
+- RAII资源管理 (DatabaseConnection自动释放)
+- 强制错误处理 (Result/Option强制处理)
+- 消耗性设计 (AuthToken单次使用)
+- 线性类型事务 (Transaction顺序执行)
+- 编译期常量验证 (FixedBuffer<const N>)
+
+**编译验证**:
+```bash
+rustc --edition 2021 --crate-type lib drafts/20260311_2130_tool_design.rs
+# 输出: 编译成功
+```
+
+**关键洞察**：
+- 防错工具设计的4个层次：强制错误处理→RAII→类型状态机→消耗性设计
+- Rust编译期错误捕获机制：Ownership→Borrow Checker→Send/Sync→强制初始化
+- Poka-yoke原则可直接映射到软件工具设计
+
+**轨迹日志**: `logs/trails/10_tool_design/20260311_2130_trail.md`
+
+---
+
 ### 2026-03-11 14:25 深度研究v4：Typestate Builder模式与编译期强制验证
 
 **研究范围**: Web Research + 假设验证 + 代码实现（~28分钟目标）
@@ -302,6 +364,15 @@
 
 ## 代码草稿关联
 
+- `drafts/20260311_2130_tool_design.rs` - Poka-yoke防错设计与Rust编译期机制验证（v5）
+  - 包含: 类型状态机 (FileProcessor<Closed/Opened/Reading/Parsed>)
+  - 包含: RAII资源管理 (DatabaseConnection自动释放)
+  - 包含: 强制错误处理 (Result/Option强制处理)
+  - 包含: 消耗性设计 (AuthToken单次使用)
+  - 包含: 线性类型事务 (Transaction顺序执行)
+  - 包含: 编译期常量验证 (FixedBuffer<const N>)
+  - 400+行Rust代码，完整编译验证
+
 - `drafts/20260311_tool_design_v3.rs` - Typestate Builder模式与编译期强制验证（v4）
   - 包含: Typestate DatabaseConfigBuilder (5个必需字段状态追踪)
   - 包含: 状态转换实现 (Unset → Set 通过泛型impl块)
@@ -406,19 +477,28 @@
 - [x] **假设7**: Newtype模式可防止语义不同但底层类型相同的值被错误互换
   - 验证结果: ✅ 通过 - UserId/OrderId不同类型，无法互换
 
-- [ ] **假设8**: Typestate模式在大型CLI项目中不会导致类型爆炸
+- [x] **假设8**: Poka-yoke防错设计原则可应用于软件工具设计
+  - 验证结果: 通过 - 六原则映射到类型系统/编译期检查/API设计
+
+- [x] **假设9**: 消耗性设计(Linear Types)可防止资源重复使用
+  - 验证结果: 通过 - AuthToken只能authenticate一次，move语义确保
+
+- [x] **假设10**: Rust编译期机制可捕获内存安全和并发错误
+  - 验证结果: 通过 - Ownership/Borrow Checker/Send/Sync编译期验证
+
+- [ ] **假设11**: Typestate模式在大型CLI项目中不会导致类型爆炸
   - 验证思路: 分析ripgrep、fd等项目代码，统计类型状态数量
 
-- [ ] **假设9**: Functional Core, Imperative Shell在Rust CLI中的性能开销可忽略
+- [ ] **假设12**: Functional Core, Imperative Shell在Rust CLI中的性能开销可忽略
   - 验证思路: 对比纯函数核心与内联IO操作的基准测试
 
-- [ ] **假设10**: 六层边界可以系统化应用到任何CLI工具设计
+- [ ] **假设13**: 六层边界可以系统化应用到任何CLI工具设计
   - 验证思路: 选择3-5个不同领域CLI工具，应用六层边界并评估
 
-- [ ] **假设11**: 分层配置验证比即时验证有更好的用户体验
+- [ ] **假设14**: 分层配置验证比即时验证有更好的用户体验
   - 验证思路: 用户研究，对比两种模式的错误信息清晰度
 
-- [ ] **假设12**: 对于简单CLI工具，Typestate可能导致过度设计
+- [ ] **假设15**: 对于简单CLI工具，Typestate可能导致过度设计
   - 验证思路: 对比不同复杂度CLI工具使用Typestate的代码量变化
 
 ## 下一步研究方向
