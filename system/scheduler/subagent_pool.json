@@ -1,37 +1,85 @@
 {
   "active_agents": {
-    "f4a8c2e1b9d6g3h5": {
-      "direction": "04_deterministic_arch",
-      "started_at": "2026-03-11T13:05:00",
+    "a6c81c857ac864661": {
+      "direction": "01_core_principles",
+      "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "g7b3d9f2e5a1h4k8": {
-      "direction": "05_type_constraints",
-      "started_at": "2026-03-11T13:05:00",
+    "a6ea2f79d8b62ab61": {
+      "direction": "03_structured_generation",
+      "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "h1e6k8a3c7b2f9d4": {
-      "direction": "07_layered_design",
-      "started_at": "2026-03-11T13:05:00",
+    "af0e5d80e720a6645": {
+      "direction": "06_formal_verification",
+      "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "i9c4a7f3b8e2h5k1": {
-      "direction": "08_llm_as_navigator",
-      "started_at": "2026-03-11T13:05:00",
+    "a329986c88133cfc4": {
+      "direction": "09_rust_type_system",
+      "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "j2g5h8k1d4a7c3e9": {
-      "direction": "12_engineering_roadmap",
-      "started_at": "2026-03-11T13:05:00",
+    "a8fc65f6a5e7564a9": {
+      "direction": "10_tool_design",
+      "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "k5d2a8f4c1e7b3h9": {
-      "direction": "02_refinement_calculus",
-      "started_at": "2026-03-11T13:10:00",
+    "a32aa17dc7f137506": {
+      "direction": "11_comparison",
+      "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "f4a8c2e1b9d6g3h5",
+      "direction": "04_deterministic_arch",
+      "completed_at": "2026-03-11T14:25:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "g7b3d9f2e5a1h4k8",
+      "direction": "05_type_constraints",
+      "completed_at": "2026-03-11T14:25:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "h1e6k8a3c7b2f9d4",
+      "direction": "07_layered_design",
+      "completed_at": "2026-03-11T14:25:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "i9c4a7f3b8e2h5k1",
+      "direction": "08_llm_as_navigator",
+      "completed_at": "2026-03-11T14:25:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "j2g5h8k1d4a7c3e9",
+      "direction": "12_engineering_roadmap",
+      "completed_at": "2026-03-11T14:25:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "k5d2a8f4c1e7b3h9",
+      "direction": "02_refinement_calculus",
+      "completed_at": "2026-03-11T14:25:00",
+      "duration_seconds": 4500,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "ac70a91d1e42ea6d8",
       "direction": "02_refinement_calculus",
@@ -244,9 +292,9 @@
     }
   ],
   "stats": {
-    "total_started": 33,
-    "total_completed": 29,
-    "total_score": 23
+    "total_started": 39,
+    "total_completed": 35,
+    "total_score": 35
   },
   "scheduler": {
     "enabled": true,

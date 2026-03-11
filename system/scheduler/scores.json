@@ -1,6 +1,54 @@
 {
-  "total_score": 19,
+  "total_score": 31,
   "runs": [
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "task_id": "f4a8c2e1b9d6g3h5",
+      "direction": "确定性架构",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "task_id": "g7b3d9f2e5a1h4k8",
+      "direction": "类型约束生成",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "task_id": "h1e6k8a3c7b2f9d4",
+      "direction": "分层设计",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "task_id": "i9c4a7f3b8e2h5k1",
+      "direction": "LLM导航器",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "task_id": "j2g5h8k1d4a7c3e9",
+      "direction": "工程路线图",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "task_id": "k5d2a8f4c1e7b3h9",
+      "direction": "Refine4LLM",
+      "duration_seconds": 4500,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
     {
       "timestamp": "2026-03-10T09:13:00",
       "task_id": "aa234caec371b5880",
@@ -227,10 +275,10 @@
     }
   ],
   "stats": {
-    "total_runs": 29,
-    "excellent": 23,
+    "total_runs": 35,
+    "excellent": 29,
     "acceptable": 1,
     "insufficient": 6,
-    "total_duration_seconds": 53760
+    "total_duration_seconds": 82560
   }
 }
