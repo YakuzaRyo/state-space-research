@@ -178,7 +178,15 @@
 - [x] 根据研究成果生成 DIRECTIONS_DYNAMIC.md
 - [x] 执行新提出的动态方向
 
-### 2026-03-10
+#### 11:00 对比分析深度研究（第八轮）
+- [x] 研究方向: 对比分析 - Cursor架构深度分析
+- [x] 核心问题: Cursor云端Agent vs 状态空间架构的根本差异
+- [x] 调研: Cursor "第三时代AI开发"架构（Tab→同步Agent→云端Agent）
+- [x] 调研: Cursor安全沙箱架构（macOS Seatbelt/Linux Landlock+seccomp/Windows WSL2）
+- [x] 核心洞察: 运行时沙箱 vs 编译期边界，两种安全范式的本质区别
+- [x] 识别缺陷8: 运行时沙箱的脆弱性（动态配置、跨平台不一致、逃逸风险）
+- [x] 产出: 更新 directions/11_comparison.md (新增第八轮研究)
+- [x] 积分: +1 (深入研究, >80%时长)
 
 #### 21:50 工具设计 - 最新学术进展补充
 - [x] 研究方向: 工具设计 - 最新学术进展补充
