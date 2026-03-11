@@ -1,5 +1,5 @@
 {
-  "total_score": 31,
+  "total_score": 39,
   "runs": [
     {
       "timestamp": "2026-03-11T14:25:00",
@@ -272,13 +272,69 @@
       "duration_seconds": 1320,
       "score": 0,
       "level": "ACCEPTABLE"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "direction": "对比分析",
+      "duration_seconds": 582,
+      "score": -1,
+      "level": "INSUFFICIENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:31:00",
+      "direction": "形式验证",
+      "duration_seconds": 1680,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T14:25:00",
+      "direction": "Rust类型系统",
+      "duration_seconds": 1920,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T15:46:00",
+      "direction": "形式验证(深入)",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T15:46:00",
+      "direction": "工具设计(深入)",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T15:46:00",
+      "direction": "对比分析(深入)",
+      "duration_seconds": 4800,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T15:46:00",
+      "direction": "核心原则",
+      "duration_seconds": 2100,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T11:25:00",
+      "direction": "结构化生成",
+      "duration_seconds": 1200,
+      "score": -1,
+      "level": "INSUFFICIENT"
     }
   ],
   "stats": {
-    "total_runs": 35,
-    "excellent": 29,
+    "total_runs": 42,
+    "excellent": 35,
     "acceptable": 1,
-    "insufficient": 6,
-    "total_duration_seconds": 82560
+    "insufficient": 7,
+    "total_duration_seconds": 103242
   }
 }

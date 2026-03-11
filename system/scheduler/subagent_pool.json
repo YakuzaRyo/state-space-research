@@ -10,28 +10,52 @@
       "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "af0e5d80e720a6645": {
-      "direction": "06_formal_verification",
-      "started_at": "2026-03-11T14:26:00",
-      "is_deep_dive": true
-    },
     "a329986c88133cfc4": {
       "direction": "09_rust_type_system",
       "started_at": "2026-03-11T14:26:00",
       "is_deep_dive": true
     },
-    "a8fc65f6a5e7564a9": {
-      "direction": "10_tool_design",
-      "started_at": "2026-03-11T14:26:00",
+    "a7dbc7b501f8658b1": {
+      "direction": "02_refinement_calculus",
+      "started_at": "2026-03-11T15:46:00",
       "is_deep_dive": true
     },
-    "a32aa17dc7f137506": {
-      "direction": "11_comparison",
-      "started_at": "2026-03-11T14:26:00",
+    "a2f1dc3b89e8d3a0e": {
+      "direction": "04_deterministic_arch",
+      "started_at": "2026-03-11T15:46:00",
+      "is_deep_dive": true
+    },
+    "ac5364ec1fa0d6b69": {
+      "direction": "05_type_constraints",
+      "started_at": "2026-03-11T15:46:00",
       "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "af0e5d80e720a6645",
+      "direction": "06_formal_verification",
+      "completed_at": "2026-03-11T15:46:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a8fc65f6a5e7564a9",
+      "direction": "10_tool_design",
+      "completed_at": "2026-03-11T15:46:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a32aa17dc7f137506",
+      "direction": "11_comparison",
+      "completed_at": "2026-03-11T15:46:00",
+      "duration_seconds": 4800,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "f4a8c2e1b9d6g3h5",
       "direction": "04_deterministic_arch",
@@ -292,9 +316,9 @@
     }
   ],
   "stats": {
-    "total_started": 39,
-    "total_completed": 35,
-    "total_score": 35
+    "total_started": 45,
+    "total_completed": 38,
+    "total_score": 41
   },
   "scheduler": {
     "enabled": true,
