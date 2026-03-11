@@ -542,8 +542,8 @@
   },
   "scheduler": {
     "enabled": true,
-    "started_at": "2026-03-11T08:00:00",
-    "cron_jobs": ["73bd7836", "942e07a8", "d4623354"],
-    "check_interval_minutes": 20
+    "started_at": "2026-03-11T22:10:00",
+    "cron_jobs": ["73bd7836", "942e07a8", "b37098e2"],
+    "check_interval_minutes": 15
   }
 }
