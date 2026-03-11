@@ -1,15 +1,5 @@
 {
   "active_agents": {
-    "ae674690d1d36912e": {
-      "direction": "05_type_constraints",
-      "started_at": "2026-03-11T18:12:00",
-      "is_deep_dive": true
-    },
-    "a049681838a3b2425": {
-      "direction": "01_core_principles",
-      "started_at": "2026-03-11T19:00:00",
-      "is_deep_dive": true
-    },
     "a2ad80f5281d55928": {
       "direction": "03_structured_generation",
       "started_at": "2026-03-11T19:00:00",
@@ -28,6 +18,17 @@
     "a56133f42c24add08": {
       "direction": "09_rust_type_system",
       "started_at": "2026-03-11T19:15:00",
+      "is_deep_dive": true
+    },
+    "a290dfadb4edca727": {
+      "direction": "01_core_principles",
+      "started_at": "2026-03-11T19:30:00",
+      "is_deep_dive": true,
+      "is_retry": true
+    },
+    "a1b7f520dc7c42494": {
+      "direction": "05_type_constraints",
+      "started_at": "2026-03-11T19:30:00",
       "is_deep_dive": true
     }
   },
@@ -71,6 +72,24 @@
       "duration_seconds": 644,
       "score": -1,
       "is_deep_dive": true
+    },
+    {
+      "agent_id": "ae674690d1d36912e",
+      "direction": "05_type_constraints",
+      "completed_at": "2026-03-11T19:30:00",
+      "duration_seconds": 721,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a049681838a3b2425",
+      "direction": "01_core_principles",
+      "completed_at": "2026-03-11T19:30:00",
+      "duration_seconds": 179,
+      "score": 0,
+      "is_deep_dive": true,
+      "is_retry": true,
+      "fail_reason": "API rate limit (429)"
     },
     {
       "agent_id": "a2f1dc3b89e8d3a0e",
@@ -421,8 +440,8 @@
   ],
   "stats": {
     "total_started": 56,
-    "total_completed": 51,
-    "total_score": 49
+    "total_completed": 53,
+    "total_score": 51
   },
   "scheduler": {
     "enabled": true,
