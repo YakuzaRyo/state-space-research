@@ -8,6 +8,62 @@
 
 ## 研究历程
 
+### 2026-03-11 14:25 深度研究v4：Typestate Builder模式与编译期强制验证
+
+**研究范围**: Web Research + 假设验证 + 代码实现（~28分钟目标）
+
+**核心问题**: 如何设计'无法产生错误'的工具?
+
+**Web Research发现**:
+
+1. **CLI Error Handling Best Practices 2024**（来源：[technorely.com](https://technorely.com/insights/effective-error-handling-rust-cli-apps-best-practices-examples-and-advanced-techniques)）
+   - 使用Result而非panic处理可恢复错误
+   - 定义自定义错误类型，使用thiserror/anyhow减少样板代码
+   - 分离错误流(stderr)和输出流(stdout)
+   - 非零退出码对脚本和CI至关重要
+
+2. **Type-Safe Builder Pattern in Rust**（来源：[gabriels.computer](https://gabriels.computer/blog/type_safe_builder/)）
+   - 传统Builder使用Option<T>并在运行时验证，存在运行时开销
+   - Typestate模式使用PhantomData<Set/Unset>在编译期追踪字段状态
+   - build()方法仅在所有字段为Set时可用，编译期保证完整性
+
+3. **Advanced Builder with Lazy Generics**（来源：[geo-ant.github.io](https://geo-ant.github.io/blog/2024/rust-rethinking-builders-lazy-generics/)）
+   - 泛型惰性求值技术
+   - 复杂类型状态转换模式
+
+4. **Design Patterns: Typestate Builder**（来源：[blog.ediri.io](https://blog.ediri.io/design-patterns-in-rust-upgrading-the-builder-pattern-using-the-typestate-pattern)）
+   - 使用泛型参数追踪每个字段状态
+   - 状态转换通过返回不同泛型参数的Builder实现
+   - 零运行时开销：PhantomData是ZST（Zero-Sized Type）
+
+**验证的假设**：
+
+| 假设 | 验证结果 | 关键证据 |
+|------|----------|----------|
+| **H1**: Builder模式可防止配置错误 | ✅ 验证 | DatabaseConfigBuilder<Set,Set,Set,Set,Set>才能build() |
+| **H2**: 类型系统可强制正确使用顺序 | ✅ 验证 | 泛型状态转换强制字段设置顺序 |
+| **H3**: 构造时验证优于使用时验证 | ✅ 验证 | 编译期保证，零运行时开销 |
+| **H4**: 用户体验与类型安全可平衡 | ✅ 验证 | 可选字段不追踪状态，减少复杂度 |
+| **H5**: PhantomData零运行时开销 | ✅ 验证 | ZST编译期完全擦除 |
+| **H6**: CLI命令选择可类型安全 | ✅ 验证 | CliConfigBuilder<NoCommand>无build()方法 |
+
+**代码实现**: `drafts/20260311_tool_design_v3.rs` (544行)
+- Typestate DatabaseConfigBuilder (5个必需字段的状态追踪)
+- 状态转换实现 (Unset → Set 通过泛型impl块)
+- 可选字段设计 (timeout/max_connections/ssl_mode不追踪状态)
+- 类型安全CLI Builder (NoCommand/HasCommand状态)
+- 不可变配置模式 (ImmutableConfig封装)
+- 密封trait模式 (防止外部实现)
+- 编译期错误示例 (注释掉的错误代码)
+
+**关键洞察**：
+- 非法配置不可表示：未设置必需字段时，build()方法根本不存在
+- 零成本抽象：所有类型安全机制运行时完全擦除
+- 渐进式API：可选字段不增加类型复杂度
+- 状态机强制正确性：CLI必须先选命令才能设置其他选项
+
+---
+
 ### 2026-03-11 10:49 深度研究v3：Typestate与错误预防设计
 
 **研究范围**: Web Research + 假设验证 + 代码实现（~28分钟目标）
@@ -245,6 +301,15 @@
 - 待补充...
 
 ## 代码草稿关联
+
+- `drafts/20260311_tool_design_v3.rs` - Typestate Builder模式与编译期强制验证（v4）
+  - 包含: Typestate DatabaseConfigBuilder (5个必需字段状态追踪)
+  - 包含: 状态转换实现 (Unset → Set 通过泛型impl块)
+  - 包含: 可选字段设计 (不追踪状态减少复杂度)
+  - 包含: 类型安全CLI Builder (NoCommand/HasCommand状态)
+  - 包含: 不可变配置模式 (ImmutableConfig封装)
+  - 包含: 密封trait模式 (防止外部实现)
+  - 544行Rust代码，完整注释说明设计决策
 
 - `drafts/20260311_工具设计.rs` - Typestate与错误预防设计验证（v3）
   - 包含: Newtype模式 (UserId/OrderId/ProductId)

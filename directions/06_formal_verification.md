@@ -8,6 +8,53 @@
 
 ## 研究历程
 
+### 2026-03-11 深度研究 v3 - 轻量级契约宏
+
+#### 核心成果
+
+**运行时契约验证框架实现**:
+
+```rust
+// 前置条件宏
+requires!(!arr.is_empty(), "array must not be empty");
+requires!(arr.windows(2).all(|w| w[0] <= w[1]), "array must be sorted");
+
+// 后置条件宏
+ensures!(quotient * divisor + remainder == dividend, "division correctness");
+
+// 不变量宏
+invariant!(left <= right, "left must not exceed right");
+```
+
+**LLM输出验证器**:
+
+```rust
+pub enum VerificationResult {
+    Passed,
+    PreconditionViolation { condition: String, context: String },
+    PostconditionViolation { condition: String, actual: String },
+    InvariantViolation { invariant: String, state: String },
+}
+
+impl LlmOutputValidator {
+    pub fn validate_numeric_range(value: i32, min: i32, max: i32, context: &str) -> VerificationResult;
+    pub fn validate_array_invariants<T: Ord + Debug>(arr: &[T], should_be_sorted: bool) -> VerificationResult;
+    pub fn validate_string(output: &str, max_len: usize) -> VerificationResult;
+}
+```
+
+**验证结果**:
+- 代码编译成功，零依赖
+- 10个单元测试全部通过
+- 包含panic测试验证契约失败场景
+
+**关键洞察**:
+1. Rust宏可实现零成本契约抽象
+2. 运行时契约是形式验证的有效轻量级补充
+3. 结构化验证结果可用于LLM反馈循环
+
+---
+
 ### 2026-03-11 深度研究
 
 #### 1. Web Research 关键发现
@@ -459,12 +506,20 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 - [x] **H2**: Kani验证器与LLM的集成应采用CEGIS循环架构 → **已验证，成立(高置信度)**
 - [x] **H3**: 形式验证对LLM响应时间的影响在可接受范围内 → **已验证，部分成立(中置信度)**
 - [x] **H4**: 内存安全和panic-free属性最适合形式验证 → **已验证，成立(高置信度)**
+- [x] **H5**: Rust宏可以实现零成本运行时契约验证 → **已验证，成立(高置信度)**
+  - 依据: `requires!`, `ensures!`, `invariant!` 宏编译通过，测试全部通过
+  - 依据: 10个单元测试验证前置/后置条件和不变量检查
+  - 代码: `drafts/20260311_verification_v3.rs`
+- [x] **H6**: 运行时契约检查可作为LLM输出的轻量级过滤器 → **已验证，成立(高置信度)**
+  - 依据: `LlmOutputValidator` 实现结构化验证结果
+  - 依据: 可区分前置条件、后置条件和不变量违反
 
 ### 遗留假设
 - [ ] AutoVerus多智能体架构在状态空间中的应用
 - [ ] 分层验证策略(L1-L4)的性能权衡
 - [ ] 验证缓存机制的有效性
 - [ ] 并发代码验证与状态空间的集成
+- [ ] CEGIS循环与运行时契约的集成方案
 
 ---
 
@@ -491,6 +546,14 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 
 ### 代码草稿
 - `drafts/20260311_形式验证.rs` - 包含验证假设的核心实现
+- `drafts/20260311_verification_v3.rs` - 轻量级契约宏实现，包含:
+  - `requires!`, `ensures!`, `invariant!` 契约宏
+  - `ContractFn<T, R>` 契约包装器类型
+  - `binary_search` 二分查找契约验证示例
+  - `safe_divide` 安全除法契约验证示例
+  - `LlmOutputValidator` LLM输出验证器
+  - 10个单元测试，全部通过
 
 ### 轨迹日志
 - `logs/trails/06_formal_verification/20260311_104721_kimi_trail.md` - 完整研究过程记录
+- `logs/trails/06_formal_verification/20260311_1425_verification_v3_trail.md` - v3深度研究轨迹

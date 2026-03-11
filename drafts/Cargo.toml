@@ -1,0 +1,15 @@
+[package]
+name = "state-space-safety-guardrails"
+version = "0.3.0"
+edition = "2021"
+authors = ["State Space Research Team"]
+description = "Type-level state machine for AI code generation safety"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+
+[dev-dependencies]
+
+[[bin]]
+name = "comparison_v3"
+path = "20260311_comparison_v3.rs"
