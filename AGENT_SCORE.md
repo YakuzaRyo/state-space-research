@@ -31,7 +31,9 @@
 
 | 2026-03-11 | 12:39 | state-space-research | ~25min | 83% | +1 | 核心原则 - VeriGuard形式化验证与TypePilot持续研究 |
 
----
+| 2026-03-11 | 13:39 | state-space-research | ~25min | 83% | +1 | 核心原则 - LLM辅助FSMench调研 |
+
+---设计与LPS-B
 
 ## 当前积分
 
