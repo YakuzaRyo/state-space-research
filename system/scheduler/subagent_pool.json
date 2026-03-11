@@ -1,16 +1,5 @@
 {
-  "active_agents": {
-    "a626ee2f4dfa6f93e": {
-      "direction": "02_refinement_calculus",
-      "started_at": "2026-03-11T19:15:00",
-      "is_deep_dive": true
-    },
-    "a56133f42c24add08": {
-      "direction": "09_rust_type_system",
-      "started_at": "2026-03-11T19:15:00",
-      "is_deep_dive": true
-    }
-  },
+  "active_agents": {},
   "completed_runs": [
     {
       "agent_id": "abc3331ef835ca7fc",
@@ -53,42 +42,21 @@
       "is_deep_dive": true
     },
     {
-      "agent_id": "a2ad80f5281d55928",
-      "direction": "03_structured_generation",
-      "completed_at": "2026-03-11T20:00:00",
-      "duration_seconds": 417,
-      "score": 0,
-      "is_deep_dive": true,
-      "is_retry": true,
-      "fail_reason": "API rate limit (429)"
-    },
-    {
-      "agent_id": "ad9bf281db5af6760",
-      "direction": "12_engineering_roadmap",
-      "completed_at": "2026-03-11T20:00:00",
-      "duration_seconds": 548,
-      "score": 0,
-      "is_deep_dive": true,
-      "is_retry": true,
-      "fail_reason": "API rate limit (429)"
+      "agent_id": "a56133f42c24add08",
+      "direction": "09_rust_type_system",
+      "completed_at": "2026-03-11T20:15:00",
+      "duration_seconds": 664,
+      "score": -1,
+      "is_deep_dive": true
     },
     {
       "agent_id": "a290dfadb4edca727",
       "direction": "01_core_principles",
-      "completed_at": "2026-03-11T20:00:00",
-      "duration_seconds": 0,
+      "completed_at": "2026-03-11T20:15:00",
+      "duration_seconds": 512,
       "score": 0,
       "is_deep_dive": true,
       "is_retry": true,
-      "fail_reason": "API rate limit (429)"
-    },
-    {
-      "agent_id": "a1b7f520dc7c42494",
-      "direction": "05_type_constraints",
-      "completed_at": "2026-03-11T20:00:00",
-      "duration_seconds": 177,
-      "score": 0,
-      "is_deep_dive": true,
       "fail_reason": "API rate limit (429)"
     },
     {
@@ -458,7 +426,7 @@
   ],
   "stats": {
     "total_started": 56,
-    "total_completed": 57,
+    "total_completed": 59,
     "total_score": 51
   },
   "scheduler": {
