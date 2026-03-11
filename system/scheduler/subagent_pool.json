@@ -10,11 +10,6 @@
       "started_at": "2026-03-11T21:49:00",
       "is_deep_dive": true
     },
-    "ab8379a445ba75bc2": {
-      "direction": "03_structured_generation",
-      "started_at": "2026-03-11T22:01:00",
-      "is_deep_dive": true
-    },
     "a0c659e655975f51b": {
       "direction": "01_core_principles",
       "started_at": "2026-03-11T22:05:00",
@@ -29,9 +24,22 @@
       "direction": "09_rust_type_system",
       "started_at": "2026-03-11T22:15:00",
       "is_deep_dive": true
+    },
+    "a59d6c19bd33dc984": {
+      "direction": "02_refinement_calculus",
+      "started_at": "2026-03-11T22:20:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "ab8379a445ba75bc2",
+      "direction": "03_structured_generation",
+      "completed_at": "2026-03-11T22:20:00",
+      "duration_seconds": 504,
+      "score": -1,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a74fc4f15dcdf6ece",
       "direction": "12_engineering_roadmap",
@@ -544,9 +552,9 @@
     }
   ],
   "stats": {
-    "total_started": 66,
-    "total_completed": 70,
-    "total_score": 62
+    "total_started": 67,
+    "total_completed": 71,
+    "total_score": 61
   },
   "scheduler": {
     "enabled": true,

@@ -1,6 +1,14 @@
 {
-  "total_score": 50,
+  "total_score": 49,
   "runs": [
+    {
+      "timestamp": "2026-03-11T22:20:00",
+      "task_id": "ab8379a445ba75bc2",
+      "direction": "结构化生成",
+      "duration_seconds": 504,
+      "score": -1,
+      "level": "INSUFFICIENT"
+    },
     {
       "timestamp": "2026-03-11T22:15:00",
       "task_id": "a74fc4f15dcdf6ece",
@@ -418,10 +426,10 @@
     }
   ],
   "stats": {
-    "total_runs": 54,
+    "total_runs": 55,
     "excellent": 45,
     "acceptable": 2,
-    "insufficient": 8,
-    "total_duration_seconds": 125281
+    "insufficient": 9,
+    "total_duration_seconds": 125785
   }
 }
