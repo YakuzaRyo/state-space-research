@@ -278,14 +278,13 @@
 - [x] 产出: 更新 directions/11_comparison.md (新增第六轮研究)
 - [x] 积分: +1 (深入研究, 83%时长)
 
-### 2026-03-11 12:08 核心原则深度研究
+### 2026-03-11 12:39 核心原则深度研究（持续）
 - [x] 研究方向: 核心原则 - 状态空间设计
 - [x] 核心问题: 如何让错误在设计上不可能发生?
-- [x] 调研: 搜索类型系统与LLM代码生成相关学术论文
-- [x] 调研: TypePilot论文（Scala类型系统用于安全的LLM生成代码）
-- [x] 核心洞察: TypePilot与状态空间架构"硬性边界"理念高度一致
-- [x] 产出: 更新 directions/01_core_principles.md (新增TypePilot资源)
-- [x] 产出: 提出待验证假设4 (TypePilot思路迁移到Rust)
+- [x] 调研: 搜索TypePilot最新进展（Scala类型系统用于LLM安全代码生成）
+- [x] 调研: 搜索VeriGuard形式化验证框架
+- [x] 核心洞察: VeriGuard将形式化验证与LLM Agent安全结合，追求数学上可证明的安全性
+- [x] 产出: 更新 directions/01_core_principles.md (新增VeriGuard资源 + 假设5)
 - [x] 积分: +1 (深入研究)
 
 ### 2026-03-11 11:39 对比分析深度研究（第九轮）
