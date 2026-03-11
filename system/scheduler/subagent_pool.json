@@ -1,10 +1,5 @@
 {
   "active_agents": {
-    "ac70a91d1e42ea6d8": {
-      "direction": "02_refinement_calculus",
-      "started_at": "2026-03-11T12:00:00",
-      "is_deep_dive": true
-    },
     "f4a8c2e1b9d6g3h5": {
       "direction": "04_deterministic_arch",
       "started_at": "2026-03-11T13:05:00",
@@ -29,9 +24,22 @@
       "direction": "12_engineering_roadmap",
       "started_at": "2026-03-11T13:05:00",
       "is_deep_dive": true
+    },
+    "k5d2a8f4c1e7b3h9": {
+      "direction": "02_refinement_calculus",
+      "started_at": "2026-03-11T13:10:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "ac70a91d1e42ea6d8",
+      "direction": "02_refinement_calculus",
+      "completed_at": "2026-03-11T13:10:00",
+      "duration_seconds": 1320,
+      "score": 1,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a9f4c2b8e1d5g6h3",
       "direction": "04_deterministic_arch",
@@ -236,9 +244,9 @@
     }
   ],
   "stats": {
-    "total_started": 32,
-    "total_completed": 28,
-    "total_score": 22
+    "total_started": 33,
+    "total_completed": 29,
+    "total_score": 23
   },
   "scheduler": {
     "enabled": true,

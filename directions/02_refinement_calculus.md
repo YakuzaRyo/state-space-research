@@ -8,6 +8,51 @@
 
 ## 研究历程
 
+### 2026-03-11 深度研究（本次）
+**研究重点**: Web Research + 假设验证 + Rust实现
+
+**Web Research发现**:
+
+#### 1. Refine4LLM (POPL 2025) - 核心突破
+- **论文**: "Automated Program Refinement: Guide and Verify Code Large Language Model with Refinement Calculus"
+- **核心贡献**: 首个将LLM与程序精化演算结合的框架
+- **技术方案**:
+  - 形式化规约驱动 (L_spec) 而非自然语言驱动
+  - 精化法则库预定义 (Skip, Assignment, Sequential, Iteration, Alternation)
+  - ATP (Z3, CVC4, Vampire, E-prover) 验证每次精化
+  - 反例反馈引导LLM修正
+- **实验结果**: 精化步骤减少74%，通过率提升至82%
+
+#### 2. Flux (PLDI 2023) - Rust精化类型
+- **论文**: "Flux: Liquid Types for Rust"
+- **核心贡献**: 将Liquid Types引入Rust，与所有权机制结合
+- **技术特点**:
+  - 精化类型语法: `i32{v: 0 <= v}`
+  - 自动推断循环不变式
+  - Strong References支持可变借用追踪
+  - CHC (Constrained Horn Clauses)后端求解
+
+#### 3. Prusti - 契约式验证
+- **核心贡献**: 基于Viper框架的Rust验证器
+- **技术特点**:
+  - `#[requires(...)]` / `#[ensures(...)]` 注解
+  - `old(...)` 和 `result` 关键字
+  - 分离逻辑支持
+
+#### 4. 结构化生成技术
+- **XGrammar**: 约束解码确保LLM输出符合语法
+- **Outlines**: 基于正则/CFG的结构化生成
+- **应用**: 将精化法则作为语法约束，限制LLM生成空间
+
+**技术方案对比**:
+
+| 方案 | 约束机制 | 验证方式 | 自动化程度 | 适用场景 |
+|------|----------|----------|------------|----------|
+| Refine4LLM | 精化法则 | ATP (Z3等) | 高 | 算法实现 |
+| Flux | 精化类型 | SMT求解 | 高 | 系统编程 |
+| Prusti | 契约注解 | Viper | 中 | 复杂规约 |
+| XGrammar | 语法约束 | 解析器 | 极高 | 结构化输出 |
+
 ### 2026-03-10 深度研究
 - 深入分析 POPL 2025 论文 "Automated Program Refinement: Guide and Verify Code Large Language Model with Refinement Calculus"
 - 研究 LLM4PR (arXiv 2406.18616) 相关工作
@@ -38,7 +83,28 @@
 2. **非形式系统**: LLM 交互、提示构建、代码生成
 3. **验证系统**: ATP 集成 (Z3, CoqHammer)、反例反馈
 
-#### 2. LLM4PR (arXiv 2406.18616)
+#### 2. Flux (PLDI 2023)
+**标题**: Flux: Liquid Types for Rust
+
+**核心贡献**:
+- Liquid Types (精化类型) 与 Rust 所有权机制结合
+- 自动推断精化类型和循环不变式
+- Strong References 支持可变借用追踪
+- CHC (Constrained Horn Clauses) 后端验证
+
+**语法示例**:
+```rust
+#[flux::sig(fn(i32[@n]) -> i32{v: v > n})]
+fn increment(x: i32) -> i32 {
+    x + 1
+}
+```
+
+**资源**:
+- [Flux Book](https://flux-rs.github.io/)
+- [论文 PDF](https://ranjitjhala.github.io/static/flux-pldi23.pdf)
+
+#### 3. LLM4PR (arXiv 2406.18616)
 **标题**: Towards Large Language Model Aided Program Refinement
 
 **核心贡献**:
@@ -186,6 +252,79 @@
    - 高层规约 (抽象) ──▶ 低层规约 (具体)
    - 类似于状态空间中的抽象层次
 
+## 研究假设与验证 (2026-03-11)
+
+### 本次研究提出的假设
+
+| 假设 | 描述 | 置信度 | 验证状态 |
+|------|------|--------|----------|
+| H1 | 精化法则可作为LLM的结构化生成约束 | 高 | 已验证 (Refine4LLM) |
+| H2 | Rust类型系统可编码精化演算核心概念 | 高 | 代码实现完成 |
+| H3 | Weakest Precondition演算可系统化验证 | 高 | 数学基础确立 |
+| H4 | 与现有工具(Verus/Flux)集成可行 | 中 | 导出格式已实现 |
+| H5 | 结构化解码(XGrammar)可加速精化选择 | 中 | 待验证 |
+
+### 详细验证结果
+
+#### H1: 技术假设 - 精化如何约束LLM生成
+
+**约束机制**:
+1. **状态空间限制**: 规范语句 `w:[pre, post]` 定义有效状态
+2. **转移限制**: 仅允许预定义精化法则（Skip/Assignment/Sequential/Alternation/Iteration）
+3. **验证要求**: 每步生成证明义务，ATP验证通过后方可继续
+4. **反馈循环**: 验证失败提供反例，引导LLM修正
+
+**关键洞察**: 将"生成正确代码"问题转化为"选择并应用正确精化法则"问题——搜索空间大幅缩小。
+
+#### H2: 实现假设 - Rust精化框架
+
+**实现组件**:
+```rust
+// 类型化规范
+pub struct RefinedSpecification {
+    pub frame: Vec<TypedVariable>,      // 带边界信息的变量
+    pub precondition: RefinedPredicate,  // 结构化谓词
+    pub postcondition: RefinedPredicate,
+    pub refinement_depth: usize,         // 精化深度追踪
+    pub parent: Option<Box<...>>,        // 支持回溯
+}
+
+// 精化法则（带证明义务）
+pub fn assignment_law(...) -> (RefinedResult, Vec<ProofObligation>)
+```
+
+**验证工具集成**:
+- Verus导出: `requires`/`ensures`语法
+- Flux导出: 精化类型语法
+- 支持Z3 SMT-LIB格式
+
+#### H3: 性能假设 - 质量影响
+
+**量化对比**:
+
+| 指标 | 精化约束 | 直接LLM | 改进 |
+|------|----------|---------|------|
+| HumanEval通过率 | 82% | ~65% | +17% |
+| 精化步骤 | 基准 | +74% | -74% |
+| 错误检测 | 每步即时 | 最终验证 | 早期发现 |
+| 验证方式 | 组合式 | 整体式 | 可组合 |
+
+#### H4: 适用性假设 - 应用领域
+
+**高度适用**:
+- 安全关键系统（航空、医疗）
+- 算法实现（数学规格清晰）
+- 系统编程（内存+功能正确性）
+- 密码学协议（安全属性可形式化）
+- 教育场景（形式化方法教学）
+
+**不太适用**:
+- 探索性编程（规格不明）
+- 快速原型（开销过高）
+- UI/UX代码（难以形式化）
+- 自然语言处理（语义规格困难）
+- 创意编程（无明确正确性标准）
+
 ## Rust 实现思路
 
 ### 数据结构表示
@@ -288,82 +427,12 @@ impl VerifiableExport for Specification {
 }
 ```
 
-## 研究假设与验证 (2026-03-11)
-
-### 已验证假设
-
-| 假设 | 描述 | 状态 | 证据 |
-|------|------|------|------|
-| H1 (技术) | 程序精化通过预定义法则约束LLM生成 | ✅ 已验证 | 精化法则库限制生成空间，每步需ATP验证 |
-| H2 (实现) | Rust类型系统可编码精化演算 | ✅ 已验证 | TypedVariable/RefinedPredicate完整实现 |
-| H3 (性能) | 精化约束提升生成质量 | ✅ 已验证 | 74%步骤减少，82%通过率(Refine4LLM) |
-| H4 (适用) | 明确适用/不适用领域 | ✅ 已验证 | 安全关键系统适用，探索性编程不适用 |
-
-### 详细验证结果
-
-#### H1: 技术假设 - 精化如何约束LLM生成
-
-**约束机制**:
-1. **状态空间限制**: 规范语句 `w:[pre, post]` 定义有效状态
-2. **转移限制**: 仅允许预定义精化法则（Skip/Assignment/Sequential/Alternation/Iteration）
-3. **验证要求**: 每步生成证明义务，ATP验证通过后方可继续
-4. **反馈循环**: 验证失败提供反例，引导LLM修正
-
-**关键洞察**: 将"生成正确代码"问题转化为"选择并应用正确精化法则"问题——搜索空间大幅缩小。
-
-#### H2: 实现假设 - Rust精化框架
-
-**实现组件**:
-```rust
-// 类型化规范
-pub struct RefinedSpecification {
-    pub frame: Vec<TypedVariable>,      // 带边界信息的变量
-    pub precondition: RefinedPredicate,  // 结构化谓词
-    pub postcondition: RefinedPredicate,
-    pub refinement_depth: usize,         // 精化深度追踪
-    pub parent: Option<Box<...>>,        // 支持回溯
-}
-
-// 精化法则（带证明义务）
-pub fn assignment_law(...) -> (RefinedResult, Vec<ProofObligation>)
-```
-
-**验证工具集成**:
-- Verus导出: `requires`/`ensures`语法
-- Flux导出: 精化类型语法
-- 支持Z3 SMT-LIB格式
-
-#### H3: 性能假设 - 质量影响
-
-**量化对比**:
-
-| 指标 | 精化约束 | 直接LLM | 改进 |
-|------|----------|---------|------|
-| HumanEval通过率 | 82% | ~65% | +17% |
-| 精化步骤 | 基准 | +74% | -74% |
-| 错误检测 | 每步即时 | 最终验证 | 早期发现 |
-| 验证方式 | 组合式 | 整体式 | 可组合 |
-
-#### H4: 适用性假设 - 应用领域
-
-**高度适用**:
-- 安全关键系统（航空、医疗）
-- 算法实现（数学规格清晰）
-- 系统编程（内存+功能正确性）
-- 密码学协议（安全属性可形式化）
-- 教育场景（形式化方法教学）
-
-**不太适用**:
-- 探索性编程（规格不明）
-- 快速原型（开销过高）
-- UI/UX代码（难以形式化）
-- 自然语言处理（语义规格困难）
-- 创意编程（无明确正确性标准）
-
 ## 研究轨迹
 
-- **深度研究记录**: `logs/trails/02_refinement_calculus/20260311_0800_refinement_trail.md`
-- **代码实现**: `drafts/20260311_0800_refinement_calculus.rs` (约1150行)
+- **本次深度研究记录**: `logs/trails/02_refinement_calculus/20260311_1200_trail.md`
+- **本次代码实现**: `drafts/20260311_Refine4LLM.rs` (939行)
+- **历史研究记录**: `logs/trails/02_refinement_calculus/20260311_0800_refinement_trail.md`
+- **历史代码实现**: `drafts/20260311_0800_refinement_calculus.rs` (约1150行)
 
 ## 下一步研究方向
 
@@ -396,20 +465,34 @@ pub fn assignment_law(...) -> (RefinedResult, Vec<ProofObligation>)
    - [ ] 从历史精化学习新法则
    - [ ] 领域特定法则库
 
+6. **结构化解码实验**
+   - [ ] 使用XGrammar约束精化选择
+   - [ ] 对比约束vs无约束的生成质量
+   - [ ] 测量精化步骤减少率
+
 ### 长期 (3-6月)
 
-6. **精化引导训练**
+7. **精化引导训练**
    - [ ] 精化法则选择微调数据集
    - [ ] 训练证明义务生成模型
    - [ ] 构建验证精化数据集
 
-7. **IDE集成**
+8. **IDE集成**
    - [ ] VS Code交互式精化扩展
    - [ ] 实时证明义务显示
    - [ ] 逐步精化调试
 
 ## 参考代码
 
-- **最新实现**: `drafts/20260311_0800_refinement_calculus.rs` (深度研究版本)
-- **早期实现**: `drafts/20260311_0200_refinement_calculus.rs` (基础版本)
+- **最新实现**: `drafts/20260311_Refine4LLM.rs` (本次深度研究版本，939行)
+- **早期实现**: `drafts/20260311_0800_refinement_calculus.rs` (基础版本，约1150行)
 - **包含组件**: 规范语句、精化法则、wp演算、证明义务生成、LLM接口、Verus/Flux导出
+
+## 来源
+
+- [Refine4LLM Paper (POPL 2025)](https://popl25.sigplan.org/details/POPL-2025-popl-research-papers/69/Automated-Program-Refinement-Guide-and-Verify-Code-Large-Language-Model-with-Refinem)
+- [Flux: Liquid Types for Rust](https://ranjitjhala.github.io/static/flux-pldi23.pdf)
+- [Flux Book](https://flux-rs.github.io/)
+- [Prusti Documentation](https://viperproject.github.io/prusti-dev/user-guide/)
+- [Graz University of Technology - Hoare Logic notes](https://www.isec.tugraz.at/wp-content/uploads/2019/09/vt06-hoare-logic.pdf)
+- [EPFL - Hoare Logic: Weakest Preconditions](https://lara.epfl.ch/w/_media/fv20/lec08-01.pdf)

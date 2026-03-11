@@ -217,13 +217,20 @@
       "duration_seconds": 600,
       "score": -1,
       "level": "INSUFFICIENT"
+    },
+    {
+      "timestamp": "2026-03-11T11:06:46.648075",
+      "direction": "Refine4LLM",
+      "duration_seconds": 1320,
+      "score": 0,
+      "level": "ACCEPTABLE"
     }
   ],
   "stats": {
-    "total_runs": 28,
+    "total_runs": 29,
     "excellent": 23,
-    "acceptable": 0,
+    "acceptable": 1,
     "insufficient": 6,
-    "total_duration_seconds": 52440
+    "total_duration_seconds": 53760
   }
 }
