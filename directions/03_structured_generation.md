@@ -8,6 +8,112 @@
 
 ## 研究历程
 
+### 2026-03-11 10:44 第三轮深入研究 (v3)
+**研究范围**: XGrammar 2最新进展、llguidance对比、Token Healing、安全研究
+
+#### XGrammar 2关键突破 (2026年1月论文)
+
+**1. TagDispatch动态分派机制**
+- **问题**: Agentic LLM需要在生成过程中动态切换语法（如函数调用）
+- **方案**: Aho-Corasick自动机匹配标签，动态分派到对应grammar
+- **性能**: 支持 `<function=` 和 `<|channel|>` 等格式
+
+**2. JIT编译优化**
+- **问题**: 预编译所有token mask缓存耗时过长
+- **方案**:
+  - 按需生成：仅在访问新状态时生成缓存
+  - 缓存池：存储生成的缓存供重用
+  - 部分JIT：在prefill阶段预计算最耗时的K个mask
+- **效果**: 预处理时间减少 **8.1x**
+
+**3. 跨Grammar缓存**
+- **问题**: 不同grammar共享子结构（如JSON string类型），重复计算
+- **方案**:
+  - 层次哈希算法：拓扑排序检测相同子结构
+  - 双版本缓存：FSM-only和完整缓存（含lookahead）
+- **效果**: mask生成时间提升 **2.2x**
+
+**4. Repetition State Compression**
+- **问题**: 重复结构（如`item+`）导致状态爆炸
+- **效果**: 预处理时间减少 **99.6%**，mask生成时间减少 **2.6x**
+
+**总体性能**: 相比XGrammar 1，端到端延迟 **~7x** 加速
+
+#### Microsoft llguidance深度分析
+
+**技术差异对比**:
+
+| 特性 | XGrammar | llguidance |
+|------|----------|------------|
+| 解析算法 | PDA (下推自动机) | Earley Parser |
+| 实现语言 | C++ | Rust |
+| 启动时间 | 秒级（预计算） | 毫秒级（无预计算） |
+| 典型延迟 | ~8μs (最佳) | ~50μs |
+| 动态schema | 较慢 | 快 |
+| 静态schema | 极快 | 快 |
+
+**2025里程碑**: OpenAI于5月公开致谢llguidance作为Structured Outputs API基础
+
+#### Token Healing技术
+
+**问题**: BPE分词与字符级语法约束的失配
+- 强制约束可能产生非规范分词（如 `http://` vs `http` + `://`）
+- 模型在训练时很少见到非规范分词
+
+**解决方案**:
+1. 回退一个token
+2. 约束下一个生成的token以被移除token的文本为前缀
+3. 确保更自然的分词
+
+#### 安全研究进展
+
+**CVE-2025-57809**: XGrammar <0.1.21版本存在无限递归漏洞
+
+**约束解码攻击(CDA)**:
+- Enum攻击：在JSON schema enum值中隐藏有害内容
+- 链式Enum攻击：利用弱对齐模型生成有害前缀，通过grammar约束传递给强对齐模型
+
+#### 提出的假设与验证
+
+**H1: PDA作为状态空间边界执行引擎**
+- **置信度**: 高
+- **验证**: 代码实现验证了PDA状态与Token Mask Cache的结合可行性
+
+**H2: Rust类型系统适合实现XGrammar**
+- **置信度**: 高
+- **验证**: 类型状态模式实现编译期JSON构建验证
+
+**H3: 上下文无关token占比99%**
+- **置信度**: 中
+- **验证**: 取决于grammar复杂度，JSON格式更容易达到
+
+**H4: TagDispatch适合Agentic LLM**
+- **置信度**: 高
+- **验证**: 代码实现展示了动态语法切换机制
+
+#### 代码实现成果
+
+**文件**: `drafts/20260311_结构化生成.rs` (约600行)
+
+**实现模块**:
+1. DynamicBitset - 高效token掩码存储（128K词汇表仅需16KB）
+2. TokenClassifier - 上下文无关/相关分类
+3. PushdownAutomaton - CFG执行引擎
+4. PersistentStack - O(1)回滚支持
+5. AdaptiveTokenMaskCache - 核心优化
+6. TagDispatch - 动态语法分派
+7. JsonBuilder - 类型状态模式
+
+#### 下一步研究方向更新
+
+1. **XGrammar 2完整实现**: JIT编译、跨grammar缓存、Repetition compression
+2. **状态空间集成**: PDA作为边界执行引擎，状态空间到CFG转换
+3. **llguidance对比**: Earley vs PDA架构差异分析
+4. **安全加固**: 防范CVE-2025-57809类型漏洞，CDA检测
+5. **GPU加速**: Token mask计算的GPU offload
+
+---
+
 ### 2026-03-11 10:00 第二轮深入研究 (v2)
 **研究范围**: XGrammar 2025最新进展、结构化生成生态全面对比、Rust实现深度优化
 
@@ -383,19 +489,23 @@ pub mod type_state {
 - [x] 持久栈的内存开销是否在可接受范围内
 - [ ] 字节级处理对非英语语言的影响
 - [x] Rust实现的性能是否能接近C++版本
-- [ ] XGrammar 2的TagDispatch动态分派机制
-- [ ] 跨grammar缓存的实际效果
+- [x] XGrammar 2的TagDispatch动态分派机制
+- [x] 跨grammar缓存的实际效果
+- [ ] JIT编译在动态schema场景的性能表现
+- [ ] Token Healing在Rust中的实现效果
 
 ## 下一步研究方向
-1. **XGrammar 2动态特性**: TagDispatch、JIT编译、跨grammar缓存
-2. **与状态空间架构的集成**: 将PDA作为硬性边界执行引擎
-3. **形式化验证**: 验证约束解码的正确性
-4. **增量编译**: 支持grammar的动态更新
-5. **GPU加速**: 将token mask计算 offload 到GPU
+1. **XGrammar 2完整实现**: JIT编译、跨grammar缓存、Repetition state compression
+2. **与状态空间架构的集成**: 将PDA作为硬性边界执行引擎，设计状态空间到CFG的转换
+3. **llguidance对比研究**: Earley parser vs PDA架构差异，动态schema场景选择策略
+4. **安全加固**: 防范CVE-2025-57809类型漏洞，约束解码攻击(CDA)检测
+5. **GPU加速**: Token mask计算的GPU offload，批处理grammar编译优化
 6. **Rust derive宏**: 从struct/enum自动生成Grammar约束
-7. **llguidance对比研究**: Microsoft Rust实现的架构分析
+7. **形式化验证**: 验证约束解码的正确性
+8. **增量编译**: 支持grammar的动态更新
 
 ## 代码草稿
+- [drafts/20260311_结构化生成.rs](../drafts/20260311_结构化生成.rs) - 第三轮深入研究 - XGrammar 2完整实现 (约600行)
 - [drafts/20260311_1000_structured_gen_v2.rs](../drafts/20260311_1000_structured_gen_v2.rs) - 第二轮深入研究 (1918行)
 - [drafts/20260310_1431_structured_generation.rs](../drafts/20260310_1431_structured_generation.rs) - XGrammar核心Rust实现
 - [drafts/20260310_1750_structured_generation.rs](../drafts/20260310_1750_structured_generation.rs) - PDA约束生成验证

@@ -8,6 +8,50 @@
 
 ## 研究历程
 
+### 2026-03-11 10:49 深度研究v3：Typestate与错误预防设计
+
+**研究范围**: Web Research + 假设验证 + 代码实现（~28分钟目标）
+
+**核心问题**: 如何设计'无法产生错误'的工具?
+
+**Web Research发现**:
+
+1. **Rust Typestate Pattern 2024**（来源：[developerlife.com](http://developerlife.com/2024/05/28/typestate-pattern-rust/)）
+   - 三种实现方式：Simple Enum、Intermediate 类型转换、Advanced Generics + PhantomData
+   - CLI特定用例：Command Builder、Connection Handling、Transaction Processing
+
+2. **Zero-Cost Abstractions**（来源：[dockyard.com](https://dockyard.com/blog/2025/04/15/zero-cost-abstractions-in-rust)）
+   - 所有权借用：编译期消除内存错误，零运行时开销
+   - Const Generics：类型级常量计算
+   - Monomorphization：泛型代码编译期特化
+
+3. **Error-Proof API Design**（来源：[ByteCode Alliance](https://bytecodealliance.org/articles/security-and-correctness-in-wasmtime)）
+   - "Make misuse impossible" 设计哲学
+   - 使用类型系统而非注释来保证安全
+   - 安全必须是机械的（编译器强制执行），而非社会的（约定）
+
+**验证的假设**：
+
+| 假设 | 验证结果 | 关键证据 |
+|------|----------|----------|
+| **H1**: Typestate阻止非法状态转换 | 验证 | FileProcessor<OpenForRead>无write方法 |
+| **H2**: PhantomData零运行时开销 | 验证 | ZST编译期完全擦除 |
+| **H3**: 解析-验证-执行管道 | 验证 | RawInput/ValidatedInput类型分离强制顺序 |
+| **H4**: Newtype防止语义混淆 | 验证 | UserId/OrderId无法互换 |
+| **H5**: Typestate可能过度设计 | 待验证 | 需实际项目评估复杂度 |
+
+**代码实现**: `drafts/20260311_工具设计.rs` (312行)
+- Newtype模式验证 (UserId/OrderId/ProductId)
+- Typestate模式验证 (FileProcessor<Unconfigured/Configured/OpenForRead/OpenForWrite/Closed>)
+- 三阶段管道验证 (RawInput → ValidatedInput → ExecutionResult)
+- 类型安全CLI参数 (ValidPort/ValidHost)
+
+**意外发现**：
+- sqlx在编译期连接数据库验证SQL查询
+- Rust Mutex通过RAII和所有权防止忘记解锁/重复解锁错误
+
+---
+
 ### 2026-03-11 10:00 深度研究v2：工具设计的类型安全实现
 
 **研究范围**: Web Research + 假设验证 + 代码实现（~28分钟目标）
@@ -201,6 +245,13 @@
 - 待补充...
 
 ## 代码草稿关联
+
+- `drafts/20260311_工具设计.rs` - Typestate与错误预防设计验证（v3）
+  - 包含: Newtype模式 (UserId/OrderId/ProductId)
+  - 包含: Typestate模式 (FileProcessor<State>使用PhantomData)
+  - 包含: 三阶段管道 (RawInput → ValidatedInput → ExecutionResult)
+  - 包含: 类型安全CLI参数 (ValidPort/ValidHost)
+  - 312行Rust代码，完整注释说明设计决策
 
 - `drafts/20260311_1000_tool_design_v2.rs` - 类型安全工具设计深度实现（v2）
   - 包含: 类型安全CLI参数解析 (ValidPort/ValidHost/ValidPath)

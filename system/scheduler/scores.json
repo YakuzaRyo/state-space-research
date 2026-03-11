@@ -1,5 +1,5 @@
 {
-  "total_score": 16,
+  "total_score": 20,
   "runs": [
     {
       "timestamp": "2026-03-10T09:13:00",
@@ -182,13 +182,41 @@
       "duration_seconds": 540,
       "score": -1,
       "level": "INSUFFICIENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:50:42.175784",
+      "direction": "对比分析",
+      "duration_seconds": 2700,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:56:32.570124",
+      "direction": "形式验证",
+      "duration_seconds": 2580,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:56:34.827314",
+      "direction": "核心原则",
+      "duration_seconds": 2280,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:56:36.968904",
+      "direction": "结构化生成",
+      "duration_seconds": 2100,
+      "score": 1,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 23,
-    "excellent": 19,
+    "total_runs": 27,
+    "excellent": 23,
     "acceptable": 0,
     "insufficient": 5,
-    "total_duration_seconds": 42180
+    "total_duration_seconds": 51840
   }
 }

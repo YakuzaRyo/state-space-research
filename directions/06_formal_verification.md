@@ -8,6 +8,121 @@
 
 ## 研究历程
 
+### 2026-03-11 深度研究
+
+#### 1. Web Research 关键发现
+
+**2025年最新研究突破：**
+
+| 项目 | 核心贡献 | 关键数据 | 来源 |
+|------|----------|----------|------|
+| **AutoVerus** | 多智能体LLM自动生成Rust证明 | >90%成功率，50%在<30秒解决 | OOPSLA 2025 Distinguished Artifact Award |
+| **dafny-annotator** | AI辅助Dafny规格生成 | 成功率15.7%→50.6% | 2025年6月发布 |
+| **VerusSync** | 并发验证工具包 | 并发证明与顺序证明同样简单 | 2025年Verus扩展 |
+| **PGS框架** | PBT桥接LLM生成与验证 | pass@1提升23.1%-37.3% | arXiv:2506.18315 |
+
+**CLEVER基准测试启示 (2025):**
+- 161个形式验证问题测试
+- GPT-4o: 84.5%编译率，**0.6%证明成功率**
+- Claude-3.7: 87%编译率，**0.6%证明成功率**
+- **关键洞察**: LLM能写运行代码，但极难写可证明正确代码
+
+**Kani并发验证现状 (2025):**
+- ❌ 仍不支持async/await
+- ❌ 并发特性超出范围
+- ⚠️ 遇到并发代码时按顺序处理并发出警告
+- 底层CBMC支持并发，但Kani前端需要开发
+
+**Verus并发验证突破:**
+- ✅ VerusSync支持并发验证
+- ✅ 已验证Node Replication并发库
+- ✅ AWS Nitro隔离引擎生产应用
+- ✅ 比IronSync快两个数量级
+
+---
+
+#### 2. 提出的假设与验证
+
+**H1: 形式验证无法完全保证LLM生成代码的安全性** - 置信度: **高**
+- ✅ **已验证**
+- 依据: Kani有界验证无法覆盖无限状态空间
+- 依据: CLEVER基准显示LLM证明成功率仅0.6%
+- 依据: 形式验证只能验证规约中指定的属性
+
+**H2: Kani验证器与LLM的集成应采用CEGIS循环架构** - 置信度: **高**
+- ✅ **已验证**
+- 依据: 具体反例比通用错误消息显著提升修复成功率(16% vs 6%)
+- 依据: AutoVerus多智能体架构成功率>90%
+- 依据: 93%案例显示改进或无变化，仅7%退化
+
+**H3: 形式验证对LLM响应时间的影响在可接受范围内** - 置信度: **中**
+- ⚠️ **部分成立**
+- Flux(<1分钟)、Kani(1-5分钟): 适合交互式
+- Verus(5-30分钟)、Dafny(10-60分钟): 边缘或不适合
+- **结论**: 需要分层验证策略
+
+**H4: 内存安全和panic-free属性最适合形式验证** - 置信度: **高**
+- ✅ **已验证**
+- 依据: Kani在AWS Firecracker成功验证I/O速率限制器
+- 依据: 功能正确性证明需要更多人工干预(循环不变量)
+- 依据: 这些属性可完全自动化验证
+
+---
+
+#### 3. 代码实现验证
+
+**Kani验证模式:**
+```rust
+#[kani::proof]
+fn verify_llm_binary_search() {
+    let arr: [i32; 5] = kani::any();
+    let key: i32 = kani::any();
+    kani::assume(/* 前置条件 */);
+    let result = llm_binary_search(&arr, key);
+    assert!(/* 后置条件 */);
+}
+```
+
+**CEGIS循环架构:**
+```rust
+pub struct CegisLoop<G, V> {
+    generator: G,  // LLM代码生成
+    verifier: V,   // 形式验证器
+    max_iterations: usize,
+}
+// 循环: 生成 -> 验证 -> 反例反馈 -> 修复
+```
+
+**Clover六步一致性检查:**
+1. anno-sound: 代码满足形式规约
+2. anno-complete: 规约能重建等价代码
+3. anno2doc: 规约与文档一致性
+4. doc2anno: 文档与规约一致性
+5. code2doc: 代码与文档一致性
+6. doc2code: 文档与代码一致性
+
+**验证过滤器设计:**
+```rust
+pub struct VerificationFilter {
+    level: VerificationLevel,  // L1-L4
+    verifiers: Vec<...>,
+}
+// 只有通过验证的代码才能进入状态空间
+```
+
+---
+
+#### 4. 假设边界条件和限制
+
+| 假设 | 边界条件 | 限制 |
+|------|----------|------|
+| H1 | 有界验证适用于有限状态 | 并发代码在Kani中不支持 |
+| H2 | 无理论收敛保证 | 依赖LLM理解反例能力 |
+| H3 | 验证时间指数增长 | 不适合实时交互场景 |
+| H4 | 需要准确规约定义 | unsafe代码支持有限 |
+
+---
+
 ### 2026-03-10 深度研究
 
 #### 1. Clover框架：闭环可验证代码生成
@@ -286,12 +401,13 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 
 ## 关键资源
 
-### 论文
+### 2025年最新论文
+- [AutoVerus: Automated Proof Generation for Rust Code](http://jaylorch.us.s3.amazonaws.com/publications/autoverus.pdf) - OOPSLA 2025
+- [Dafny as Verification-Aware Intermediate Language](https://fugumt.com/fugumt/paper_check/2501.06283v1_enmode) - 2025
+- [Use Property-Based Testing to Bridge LLM Code Generation and Validation](https://ui.adsabs.harvard.edu/abs/arXiv:2506.18315) - 2025
 - [Clover: Closed-Loop Verifiable Code Generation](https://theory.stanford.edu/~barrett/pubs/SSP+24.pdf)
 - [Verus: Verifying Rust Programs using Linear Ghost Types](https://www.research-collection.ethz.ch/handle/20.500.11850/610518)
-- [AutoVerus: Automated Proof Generation for Rust Code](https://www.microsoft.com/en-us/research/publication/autoverus-automated-proof-generation-for-rust-code/)
 - [Creusot: Deductive Verification of Rust](https://jhjourdan.mketjh.fr/pdf/denis2022creusot.pdf)
-- [Prusti: Formal Verification for Rust](https://pm.inf.ethz.ch/publications/AstrauskasBilaFialaGrannanMathejaMuellerPoliSummers22.pdf)
 
 ### 开源项目
 - Dafny: https://github.com/dafny-lang/dafny
@@ -299,11 +415,13 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 - Kani: https://github.com/model-checking/kani
 - Creusot: https://github.com/xldenis/creusot
 - Flux: https://github.com/flux-rs/flux
+- dafny-annotator: https://dafny.org/blog/2025/06/21/dafny-annotator/
 
 ### 技术文档
 - [Dafny参考手册](https://dafny.org/dafny/DafnyRef/DafnyRef)
 - [Verus教程](https://verus-lang.github.io/verus/guide/)
 - [Kani文档](https://model-checking.github.io/kani/)
+- [Kani Rust特性支持](https://model-checking.github.io/kani/rust-feature-support.html)
 
 ---
 
@@ -314,6 +432,7 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 2. **不变量验证** —— 循环和状态转换的不变量检查
 3. **定理证明** —— 使用SMT求解器验证程序正确性
 4. **反例驱动修复** —— 验证失败提供具体反馈指导LLM修正
+5. **六步一致性检查** —— Clover框架的三组件相互验证
 
 ### 与状态空间的结合点
 - **形式规约作为状态约束**: 定义有效状态边界
@@ -321,67 +440,7 @@ LLM生成代码 → 形式验证器检查 → 反例反馈 → LLM修复 → 循
 - **不变量维护**: 验证确保状态转移保持约束
 - **L4保证**: 完整形式验证提供最高级别安全保证
 
----
-
-### 2026-03-11 深度研究
-
-#### 12. 形式验证过滤LLM输出的机制
-
-基于最新研究，形式验证通过以下机制过滤LLM输出：
-
-**核心过滤机制**:
-1. **契约验证**: 通过前置/后置条件确保函数行为符合规格
-2. **不变量检查**: 确保状态转换保持关键属性
-3. **反例驱动**: 验证失败提供具体输入指导LLM修复
-4. **一致性检查**: Clover六步流程捕获规格-实现-文档间的不一致
-
-**MATH-VF框架启示**:
-- **Formalizer**: 将自然语言转换为SimpleMath形式语言
-- **Critic**: 集成SymPy和Z3-SMT求解器验证每一步
-- 无需训练（training-free），比PRM更稳定
-
----
-
-#### 13. Rust验证代码实现
-
-**Kani验证模式**:
-```rust
-#[kani::proof]
-fn verify_llm_generated_code() {
-    let input = kani::any();           // 符号值生成
-    kani::assume(precondition(input)); // 前置条件
-    let output = llm_function(input);
-    assert!(postcondition(output));    // 后置条件验证
-}
-```
-
-**Clover验证器结构**:
-```rust
-pub struct CloverVerifier;
-impl CloverVerifier {
-    pub fn verify(&self, code: &str, annotations: &str, docstring: &str)
-        -> VerificationReport {
-        // 六步一致性检查
-        // 1. anno-sound: 代码满足形式规约
-        // 2. anno-complete: 规约能重建等价代码
-        // 3-6. 组件间一致性检查
-    }
-}
-```
-
-**CEGIS循环实现**:
-```rust
-pub struct CegisLoop;
-impl CegisLoop {
-    pub fn run(&self, spec: &str, llm: &mut dyn LlmGenerator) -> CegisResult {
-        // LLM生成 -> 形式验证 -> 反例反馈 -> 修复 -> 循环
-    }
-}
-```
-
----
-
-#### 14. 工具选择决策矩阵
+### 工具选择决策矩阵
 
 | 场景 | 推荐工具 | 理由 | 验证时间 |
 |------|----------|------|----------|
@@ -389,36 +448,23 @@ impl CegisLoop {
 | 功能正确性证明 | Verus | Rust原生，规格用Rust编写 | 5-30分钟 |
 | 完整形式验证 | Dafny | 成熟稳定，AWS广泛使用 | 10-60分钟 |
 | 精化类型验证 | Flux | 轻量级，自动化推断 | <1分钟 |
-
----
-
-#### 15. 与状态空间的集成方案
-
-**形式规约作为状态约束**:
-```rust
-pub struct VerificationFilter {
-    constraints: Vec<StateConstraint>,
-}
-
-impl VerificationFilter {
-    pub fn validate(&self, state: &State) -> ValidationResult {
-        // 验证状态是否满足形式约束
-    }
-}
-```
-
-**验证作为准入测试**:
-- 只有通过验证的代码才能进入状态空间
-- 验证结果作为状态元数据存储
-- 反例指导状态空间探索方向
+| 并发代码验证 | Verus | 唯一支持并发的Rust验证器 | 5-30分钟 |
 
 ---
 
 ## 待验证假设
-- [x] Clover六步验证流程的完整实现可行性 → **已验证，可实现**
-- [x] Verus规格在状态空间中的表达效率 → **需进一步测试**
-- [x] Kani有界验证与无限状态空间的关系 → **有界验证适用于有限状态子集**
-- [x] 反例反馈循环的收敛性保证 → **无理论保证，实践中有效**
+
+### 已验证假设
+- [x] **H1**: 形式验证无法完全保证LLM生成代码的安全性 → **已验证，成立(高置信度)**
+- [x] **H2**: Kani验证器与LLM的集成应采用CEGIS循环架构 → **已验证，成立(高置信度)**
+- [x] **H3**: 形式验证对LLM响应时间的影响在可接受范围内 → **已验证，部分成立(中置信度)**
+- [x] **H4**: 内存安全和panic-free属性最适合形式验证 → **已验证，成立(高置信度)**
+
+### 遗留假设
+- [ ] AutoVerus多智能体架构在状态空间中的应用
+- [ ] 分层验证策略(L1-L4)的性能权衡
+- [ ] 验证缓存机制的有效性
+- [ ] 并发代码验证与状态空间的集成
 
 ---
 
@@ -426,12 +472,25 @@ impl VerificationFilter {
 
 ### 短期目标 (1-2周)
 1. **实现Kani验证管道**: 集成cargo-kani，自动生成harness
-2. **开发Clover风格验证器**: 实现六步一致性检查
+2. **开发CEGIS循环原型**: 实现LLM生成+验证+反馈闭环
+3. **集成到调度器**: 将验证作为任务系统的准入控制
 
 ### 中期目标 (1个月)
-3. **CEGIS循环完整实现**: LLM生成 + 验证 + 反馈闭环
-4. **状态空间约束语言**: 基于Dafny/Verus规格语法
+4. **分层验证架构**: 实现L1-L4渐进式验证策略
+5. **验证缓存机制**: 避免重复验证，加速响应时间
+6. **AutoVerus架构研究**: 多智能体验证在状态空间中的应用
 
 ### 长期目标 (3个月)
-5. **分层验证架构**: L1-L4渐进式验证策略
-6. **生产级集成**: CI/CD管道集成，验证缓存
+7. **生产级CI/CD集成**: 验证管道与持续集成结合
+8. **状态空间深度集成**: 验证结果指导状态探索方向
+9. **并发验证探索**: VerusSync在分布式系统中的应用
+
+---
+
+## 研究产出
+
+### 代码草稿
+- `drafts/20260311_形式验证.rs` - 包含验证假设的核心实现
+
+### 轨迹日志
+- `logs/trails/06_formal_verification/20260311_104721_kimi_trail.md` - 完整研究过程记录

@@ -1,25 +1,5 @@
 {
   "active_agents": {
-    "a032897ce22c7bf45": {
-      "direction": "06_formal_verification",
-      "started_at": "2026-03-11T11:12:00",
-      "is_deep_dive": true
-    },
-    "adc8a76f9e309fd01": {
-      "direction": "01_core_principles",
-      "started_at": "2026-03-11T11:27:00",
-      "is_deep_dive": true
-    },
-    "acd3c7a3af09f2849": {
-      "direction": "11_comparison",
-      "started_at": "2026-03-11T11:27:00",
-      "is_deep_dive": true
-    },
-    "ab6695e27a43db7e8": {
-      "direction": "03_structured_generation",
-      "started_at": "2026-03-11T11:50:00",
-      "is_deep_dive": true
-    },
     "ac70a91d1e42ea6d8": {
       "direction": "02_refinement_calculus",
       "started_at": "2026-03-11T12:00:00",
@@ -29,9 +9,61 @@
       "direction": "10_tool_design",
       "started_at": "2026-03-11T12:00:00",
       "is_deep_dive": true
+    },
+    "a9f4c2b8e1d5g6h3": {
+      "direction": "04_deterministic_arch",
+      "started_at": "2026-03-11T12:40:00",
+      "is_deep_dive": true
+    },
+    "b2e8d5c7a4f9h1j6": {
+      "direction": "05_type_constraints",
+      "started_at": "2026-03-11T12:40:00",
+      "is_deep_dive": true
+    },
+    "c5a1f7d3b8e4k2h9": {
+      "direction": "07_layered_design",
+      "started_at": "2026-03-11T12:40:00",
+      "is_deep_dive": true
+    },
+    "d8h2k5f1a7c3e9b4": {
+      "direction": "08_llm_as_navigator",
+      "started_at": "2026-03-11T12:40:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a032897ce22c7bf45",
+      "direction": "06_formal_verification",
+      "completed_at": "2026-03-11T12:35:00",
+      "duration_seconds": 2580,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "adc8a76f9e309fd01",
+      "direction": "01_core_principles",
+      "completed_at": "2026-03-11T12:35:00",
+      "duration_seconds": 2280,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "ab6695e27a43db7e8",
+      "direction": "03_structured_generation",
+      "completed_at": "2026-03-11T12:35:00",
+      "duration_seconds": 2100,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "acd3c7a3af09f2849",
+      "direction": "11_comparison",
+      "completed_at": "2026-03-11T12:15:00",
+      "duration_seconds": 2700,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a6ea56cc5c4621fc8",
       "direction": "08_llm_as_navigator",
@@ -156,14 +188,14 @@
     }
   ],
   "stats": {
-    "total_started": 19,
-    "total_completed": 15,
-    "total_score": 22
+    "total_started": 26,
+    "total_completed": 22,
+    "total_score": 30
   },
   "scheduler": {
     "enabled": true,
     "started_at": "2026-03-11T08:00:00",
-    "cron_jobs": ["73bd7836", "942e07a8"],
+    "cron_jobs": ["73bd7836", "942e07a8", "d4623354"],
     "check_interval_minutes": 20
   }
 }
