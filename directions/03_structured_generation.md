@@ -505,12 +505,79 @@ pub mod type_state {
 8. **增量编译**: 支持grammar的动态更新
 
 ## 代码草稿
+- [drafts/20260311_2101_structured_generation.rs](../drafts/20260311_2101_structured_generation.rs) - Token级别约束核心实现验证 - XGrammar架构Rust实现 (约700行)
 - [drafts/20260311_1155_structured_generation.rs](../drafts/20260311_1155_structured_generation.rs) - 第五轮深入研究 - Token级别约束核心机制 (约500行)
 - [drafts/20260311_structured_gen_v3.rs](../drafts/20260311_structured_gen_v3.rs) - 第四轮深入研究 - XGrammar核心Rust实现验证 (1934行)
 - [drafts/20260311_结构化生成.rs](../drafts/20260311_结构化生成.rs) - 第三轮深入研究 - XGrammar 2完整实现 (约600行)
 - [drafts/20260311_1000_structured_gen_v2.rs](../drafts/20260311_1000_structured_gen_v2.rs) - 第二轮深入研究 (1918行)
 - [drafts/20260310_1431_structured_generation.rs](../drafts/20260310_1431_structured_generation.rs) - XGrammar核心Rust实现
 - [drafts/20260310_1750_structured_generation.rs](../drafts/20260310_1750_structured_generation.rs) - PDA约束生成验证
+
+### 2026-03-11 21:01 第六轮深入研究 - Token级别约束核心实现验证
+
+**研究范围**: XGrammar核心架构Rust实现与验证
+
+#### 核心假设
+
+| 假设 | 内容 | 置信度 |
+|------|------|--------|
+| H1 | Token级别约束可通过上下文无关/相关分类实现 | 高 |
+| H2 | Bitmask表示可实现O(1)掩码应用 | 高 |
+| H3 | PDA执行栈支持高效状态管理 | 高 |
+| H4 | 缓存机制可覆盖>99%的token | 中-高 |
+
+#### Web Research关键发现
+
+**XGrammar核心创新** ([论文](https://arxiv.org/abs/2411.15100)):
+1. **Token分类策略**: 上下文无关(>99%) vs 上下文相关(<1%)
+2. **自适应Mask缓存**: 160MB → 0.46MB (Llama-3.1词汇表)
+3. **字节级PDA**: 处理不规则token边界
+4. **持久执行栈**: O(1)回滚支持
+
+**其他库对比**:
+- **Outlines**: FSM-based, 仅支持正则语言 ([文档](https://dottxt-ai.github.io/outlines/))
+- **LM Format Enforcer**: 双树方法 (字符级解析器 + Tokenizer前缀树) ([PyPI](https://pypi.org/project/lm-format-enforcer/))
+- **llguidance**: Microsoft Rust实现, ~50μs/token ([crates.io](https://crates.io/crates/llguidance))
+
+#### Rust实现验证
+
+**编译结果**: 成功通过 `rustc --edition 2021 --crate-type lib`
+
+**测试结果**: 10/10 tests passed
+- `test_token_bitmask_basic` - Token掩码基本操作
+- `test_token_bitmask_all_allowed` - 全允许掩码
+- `test_token_bitmask_intersection` - 掩码交集操作
+- `test_token_classifier` - Token分类器
+- `test_pda_stack` - PDA执行栈
+- `test_context_independent_cache` - 上下文无关缓存
+- `test_constraint_engine` - 约束引擎
+- `test_apply_to_logits` - Logits掩码应用
+- `bench_bitmask_operations` - 位操作性能基准
+- `bench_apply_to_logits` - Logits应用性能基准
+
+**核心模块实现**:
+1. `TokenBitmask` - 基于`[u64; BITMASK_WORDS]`的高效掩码存储
+2. `TokenClassifier` - 上下文无关/相关Token分类
+3. `PdaStack` - 下推自动机执行栈
+4. `ContextIndependentCache` - 上下文无关Token缓存
+5. `ConstraintEngine` - 约束引擎主API
+
+#### 关键发现
+
+**性能特征**:
+- 50K词汇表仅需 `BITMASK_WORDS = 782` 个u64 (约6.2KB)
+- 位操作支持O(1)的token允许/禁止检查
+- 掩码交集操作通过SIMD友好的位运算实现
+
+**架构验证**:
+- Token分类机制可有效分离缓存友好和运行时验证token
+- PDA栈结构支持嵌套语法规则（如JSON对象嵌套）
+- 缓存机制可显著减少重复计算
+
+#### 轨迹日志
+- [logs/trails/03_structured_generation/20260311_2101_trail.md](logs/trails/03_structured_generation/20260311_2101_trail.md)
+
+---
 
 ### 2026-03-11 11:55 第五轮深入研究 (v4: Token级别约束核心)
 **研究范围**: Token级别约束LLM输出的核心机制研究

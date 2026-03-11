@@ -15,23 +15,47 @@
       "started_at": "2026-03-11T21:01:00",
       "is_deep_dive": true
     },
-    "ad117f13a6183decd": {
-      "direction": "04_deterministic_arch",
-      "started_at": "2026-03-11T21:01:00",
+    "a69ef747f4b0b1cc1": {
+      "direction": "07_layered_design",
+      "started_at": "2026-03-11T21:30:00",
       "is_deep_dive": true
     },
-    "a80a8946aec9d224b": {
-      "direction": "08_llm_as_navigator",
-      "started_at": "2026-03-11T21:01:00",
+    "a99f78e7de2b62e89": {
+      "direction": "10_tool_design",
+      "started_at": "2026-03-11T21:30:00",
       "is_deep_dive": true
     },
-    "afcda74f49159a170": {
-      "direction": "09_rust_type_system",
-      "started_at": "2026-03-11T21:01:00",
+    "a74fc4f15dcdf6ece": {
+      "direction": "12_engineering_roadmap",
+      "started_at": "2026-03-11T21:30:00",
       "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "afcda74f49159a170",
+      "direction": "09_rust_type_system",
+      "completed_at": "2026-03-11T21:10:00",
+      "duration_seconds": 1710,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "ad117f13a6183decd",
+      "direction": "04_deterministic_arch",
+      "completed_at": "2026-03-11T21:10:00",
+      "duration_seconds": 1730,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a80a8946aec9d224b",
+      "direction": "08_llm_as_navigator",
+      "completed_at": "2026-03-11T21:10:00",
+      "duration_seconds": 1690,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a626ee2f4dfa6f93e",
       "direction": "02_refinement_calculus",
@@ -464,9 +488,9 @@
     }
   ],
   "stats": {
-    "total_started": 56,
-    "total_completed": 60,
-    "total_score": 51
+    "total_started": 59,
+    "total_completed": 63,
+    "total_score": 54
   },
   "scheduler": {
     "enabled": true,

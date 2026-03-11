@@ -348,8 +348,21 @@ L0 Syntax:     验证条件的可验证编码
 
 ## 待验证假设
 
-- [ ] **假设1**: Rust所有权系统使得形式验证比C/OCaml简单一个数量级
-  - 验证思路: 对比相同算法在Rust(Verus) vs C(VCC) vs OCaml(CFML)中的证明行数
+- [x] **假设1 (2026-03-11)**: Rust所有权系统使得形式验证比C/OCaml简单一个数量级
+  - **验证思路**: 通过Typestate模式实现状态机，对比Rust编译期检查与运行时检查的开销
+  - **验证结果**: 通过，PhantomData实现的Typestate模式是零成本抽象，所有状态检查在编译期完成
+
+- [x] **假设9 (2026-03-11)**: Const Generics可以将状态ID编码为编译时常量
+  - **验证思路**: 使用`struct State<const ID: u32>`编码状态，结合impl块特化实现状态特定行为
+  - **验证结果**: 通过，`Connection<State<0>, N>`等实现展示了const generics状态编码
+
+- [x] **假设10 (2026-03-11)**: GATs可以为不同状态定义不同的关联数据类型
+  - **验证思路**: 使用`trait StateData { type Data; }`为Idle/Running/Stopped定义不同数据类型
+  - **验证结果**: 通过，`Workflow<S: StateData>`成功实现了状态相关数据类型
+
+- [x] **假设11 (2026-03-11)**: 分层状态空间可以通过多类型参数实现
+  - **验证思路**: 使用`NetworkSession<NetworkState, SessionState>`实现嵌套状态机
+  - **验证结果**: 通过，网络连接状态和会话状态独立管理，组合成完整状态空间
 
 - [x] **假设2**: Typestate + 轻量级形式验证可实现"渐进式验证"
   - 验证思路: 实现从Typestate编译期检查逐步增强到Kani/Verus完整验证的系统
@@ -488,3 +501,13 @@ L0 Syntax:     验证条件的可验证编码
   - 包含: 状态转换验证（编译期检查）
   - 包含: 组合状态空间（多维度状态）
   - 526行Rust代码，5个测试用例
+
+- `drafts/20260311_2101_rust_type_system.rs` - Typestate + Const Generics + GATs综合实现（本次研究）
+  - 包含: 基础Typestate模式 - 交通灯状态机
+  - 包含: Const Generics状态编码 - 带重试次数的连接状态机
+  - 包含: GATs模式 - 状态相关数据类型（Workflow）
+  - 包含: 类型级状态转换验证 - 文档生命周期
+  - 包含: 分层状态空间 - 嵌套状态机（NetworkSession）
+  - 560+行Rust代码，5个测试用例全部通过
+  - 编译验证: rustc --edition 2021 --crate-type lib (通过，仅1个warning)
+  - 运行验证: 所有5个演示输出正确

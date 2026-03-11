@@ -1,5 +1,5 @@
 {
-  "total_score": 41,
+  "total_score": 44,
   "runs": [
     {
       "timestamp": "2026-03-11T14:25:00",
@@ -342,13 +342,34 @@
       "duration_seconds": 1920,
       "score": 2,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T13:12:42.942402",
+      "direction": "Rust类型系统",
+      "duration_seconds": 1710,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T13:12:44.964186",
+      "direction": "确定性架构",
+      "duration_seconds": 1730,
+      "score": 1,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T13:12:46.757904",
+      "direction": "LLM导航器",
+      "duration_seconds": 1690,
+      "score": 1,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 45,
-    "excellent": 37,
+    "total_runs": 48,
+    "excellent": 40,
     "acceptable": 1,
     "insufficient": 8,
-    "total_duration_seconds": 108462
+    "total_duration_seconds": 113592
   }
 }
