@@ -181,6 +181,61 @@ Claude的感知: "我已经添加了功能X"
 - **Praetorian Thin Agent**: <150行，无状态，专注单一任务
 - **16阶段工作流模板**: TRIAGE → RETRIEVE → PROPOSE → POLICY → EXECUTE → VERIFY → COMPLETE
 
+#### 9. 确定性状态机 vs 概率性LLM决策对比（2025）
+
+**核心范式差异**:
+
+| 维度 | 确定性状态机 | 概率性LLM |
+|------|-------------|-----------|
+| 决策逻辑 | 基于规则的显式if-then-else流 | 数据驱动的统计模式匹配 |
+| 可预测性 | 100%可预测，相同输入→相同输出 | 随机性，相同输入可能产生不同输出 |
+| 输出确定性 | 单一、保证的结果 | 概率加权的结果与置信度 |
+| 类比 | 电子表格或计算器 | 与经验丰富的顾问对话 |
+
+**确定性状态机的优势与局限**:
+
+✅ **优势**:
+- **绝对透明与可审计性** — 每个决策都可追溯到特定规则
+- **监管安全** — 适用于合规要求严格的行业（金融、医疗、法律）
+- **零幻觉风险** — 不会对规则进行创造性解释
+- **数学精度** — 对计算、资格验证、合同执行至关重要
+
+❌ **局限**:
+- **僵化** — 无法处理预编程流之外的细微差别
+- **在歧义上失败** — 难以处理讽刺、非结构化意图、新情况
+- **维护负担** — 新场景需要手动重新编程
+
+**概率性LLM的优势与局限**:
+
+✅ **优势**:
+- **上下文适应性** — 处理歧义、细微差别和新情况
+- **自然语言理解** — 擅长情感分析、语调适应、人性化协商
+- **持续学习** — 无需显式重新编程即可从交互中改进
+
+❌ **局限**:
+- **幻觉风险** — 可能为了"完成"对话模式而编造事实
+- **不透明性** — 决策路径难以追踪或解释
+- **安全漏洞** — 概率推理可能绕过确定性授权检查
+
+> *"如果AI Agent'认为'它95%确定不应该将所有用户数据提供给请求的API调用，那5%的不确定性就足以让一个巧妙的Prompt或被操纵的响应变成安全漏洞。"* — GitGuardian, 2025
+
+**2025年共识：混合架构**:
+
+行业已明确转向**神经符号或混合方法**，协调两种范式：
+
+| 层级 | 功能 | 范式 |
+|------|------|------|
+| 输入/解释 | 意图识别、情感分析、实体提取 | **概率性(LLM)** |
+| 逻辑处理 | 认证、资格检查、计算、合规验证 | **确定性(状态机/规则引擎)** |
+| 响应生成 | 自然语言表述，注入确定性真实数据 | **混合** |
+| 动作执行 | API调用、数据库更新、外部系统集成 | **确定性** |
+
+**关键设计原则**:
+1. **分解而非委托** — 将复杂任务分解为模块化组件，而非将整个工作流交给LLM
+2. **工具与风险容忍度匹配** — 合规/关键操作用确定性；创意/对话任务用概率性
+3. **护栏与锚定** — 将确定性真实数据注入LLM Prompt以防止幻觉
+4. **人在回路** — 概率性推荐 → 确定性审批门控用于高风险决策
+
 ---
 
 ### 五大假设验证结果（更新）
@@ -241,6 +296,8 @@ Claude的感知: "我已经添加了功能X"
 6. **MCP协议安全危机**: 40%服务器含漏洞，证明互操作性优先于安全性的设计缺陷
 7. **二进制权限模型的失败**: "持续中断或完全信任"的二元选择无法满足生产需求
 8. **状态级回滚的必要性**: 文件级checkpoint无法解决Bash命令和状态去同步问题
+9. **混合架构共识**: 2025年行业明确转向"神经符号混合方法"，协调确定性与概率性范式
+10. **零成本抽象的关键性**: Rust类型状态模式提供编译期验证且零运行时开销，是状态空间架构的理想实现语言
 
 ---
 
@@ -348,6 +405,18 @@ Claude的感知: "我已经添加了功能X"
 - **XGrammar** - Token级结构化生成，99%词汇预计算缓存
 - **LangGraph** - 显式状态机工作流
 - **Mamba/SSM** - 选择性状态空间模型，线性复杂度O(n)
+
+### 确定性vs概率性AI研究
+- **[Deterministic AI vs. Probabilistic AI: Scaling Securely](https://moveo.ai/blog/deterministic-ai-vs-probabilistic-ai)** - Moveo.AI 2025深度分析
+- **[Probably Secure: Security Concerns of Deterministic vs Probabilistic](https://blog.gitguardian.com/probably-secure-ai-systems/)** - GitGuardian安全分析
+- **[Follow the Path or Chase the Squirrels?](https://www.dataception.com/blog/follow-the-path-or-chase-the-squirrels-agentic-deterministic-vs-probabilistic-planning.html)** - Agent决策范式对比
+- **[Agentic Artificial Intelligence](https://download.bibis.ir/Books/Artificial-Intelligence/2025/Agentic%20Artificial%20Intelligence%20-Harnessing%20AI%20Agents%20to%20Reinvent%20Business%2C%20Work%2C%20and%20Life%20(Pascal%20Bornet%2C%20Jochen%20Wirtz)_bibis.ir.pdf)** - Bornet & Wirtz 2025著作
+
+### Rust类型系统与零成本抽象
+- **[The Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)** - Rust类型状态模式深度解析
+- **[Typestate Programming - Embedded Rust Book](https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html)** - 嵌入式Rust类型状态编程
+- **[Zero-Cost Abstractions in Rust](https://dockyard.com/blog/2025/04/15/zero-cost-abstractions-in-rust-power-without-the-price)** - 零成本抽象详解
+- **[Zero Cost Abstractions - Embedded Rust Book](https://doc.rust-lang.org/beta/embedded-book/static-guarantees/zero-cost-abstractions.html)** - 官方文档
 
 ---
 

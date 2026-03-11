@@ -423,6 +423,21 @@ enum StoreType {
   - 语义约束超越语法
   - SMT求解器集成
 
+- **Grammar-Aligned Decoding** (NeurIPS 2024)
+  - ASAp算法：无偏约束解码
+  - 解决贪婪约束解码引入的分布偏差问题
+  - [PDF](https://proceedings.neurips.cc/paper_files/paper/2024/file/2bdc2267c3d7d01523e2e17ac0a754f3-Paper-Conference.pdf)
+
+- **CRANE: Expressive Grammar-Constrained LLM Generation**
+  - 思维链推理与约束生成结合
+  - 数学推理准确率提升：38% vs 29%
+  - [PDF](https://debangshu-banerjee.github.io/assets/pdf/CRANE.pdf)
+
+- **Grammar-Constrained Decoding Makes Large Language Models Effective Logical Parsers** (ACL 2025)
+  - GCD显著提升句法正确性和语义准确率
+  - 小模型受益最大（Gemma-2B可执行率>60% vs 接近0%）
+  - [PDF](https://aclanthology.org/2025.acl-industry.34.pdf)
+
 ### 开源项目
 - **[mlc-ai/xgrammar](https://github.com/mlc-ai/xgrammar)** - 官方实现 (C++/Python)
   - 核心C++后端
@@ -470,6 +485,36 @@ enum StoreType {
 - 类型系统可以转化为CFG，指导结构化生成
 - Token Mask Cache实现状态空间的高效查询
 - Rust类型状态模式提供编译期结构验证
+
+### 2026-03-11 22:00 新增架构洞察
+
+#### 假设验证结果
+
+| 假设 | 验证状态 | 关键发现 |
+|------|----------|----------|
+| Token分类是性能关键 | ✅ 已验证 | 上下文无关token可缓存，避免重复计算 |
+| 字节级PDA优势 | ✅ 已验证 | u8字节处理避免UTF-8边界问题，支持sub-UTF8 |
+| 持久栈O(1)回滚 | ✅ 已验证 | 父节点索引实现，时间复杂度O(1) |
+| Rust bitmask性能 | ✅ 已验证 | u64位操作是CPU原生指令，可达C++性能 |
+| Cache命中率>95% | ⚠️ 部分验证 | 热点访问模式下>70%，复杂grammar可能降低 |
+| Earley vs PDA | ⚠️ 未完全验证 | 动态schema场景需要更多基准数据 |
+
+#### 新发现的技术方向
+
+1. **Grammar-Aligned Decoding (NeurIPS 2024)**
+   - ASAp算法解决贪婪约束解码的分布偏差问题
+   - 提供可证明的渐近保证
+   - 与状态空间架构的形式化验证相关
+
+2. **CRANE: 思维链+约束生成**
+   - 结合CoT推理与语法约束
+   - 数学推理准确率提升31%→38%
+   - 适用于研究方向1的LLM导航
+
+3. **安全研究进展**
+   - CVE-2025-57809: XGrammar无限递归漏洞
+   - 约束解码攻击(CDA): enum值隐藏有害内容
+   - 需要安全加固措施
 
 ## GBNF语法格式
 

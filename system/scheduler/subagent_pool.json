@@ -1,10 +1,5 @@
 {
   "active_agents": {
-    "a74fc4f15dcdf6ece": {
-      "direction": "12_engineering_roadmap",
-      "started_at": "2026-03-11T21:30:00",
-      "is_deep_dive": true
-    },
     "a21e1db644a147ee9": {
       "direction": "06_formal_verification",
       "started_at": "2026-03-11T21:41:00",
@@ -29,9 +24,22 @@
       "direction": "07_layered_design",
       "started_at": "2026-03-11T22:05:00",
       "is_deep_dive": true
+    },
+    "af271c121550266a3": {
+      "direction": "09_rust_type_system",
+      "started_at": "2026-03-11T22:15:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a74fc4f15dcdf6ece",
+      "direction": "12_engineering_roadmap",
+      "completed_at": "2026-03-11T22:15:00",
+      "duration_seconds": 1138,
+      "score": 0,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a00338fc8963af663",
       "direction": "05_type_constraints",
@@ -536,8 +544,8 @@
     }
   ],
   "stats": {
-    "total_started": 65,
-    "total_completed": 69,
+    "total_started": 66,
+    "total_completed": 70,
     "total_score": 62
   },
   "scheduler": {

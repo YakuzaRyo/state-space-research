@@ -2,6 +2,14 @@
   "total_score": 50,
   "runs": [
     {
+      "timestamp": "2026-03-11T22:15:00",
+      "task_id": "a74fc4f15dcdf6ece",
+      "direction": "工程路线图",
+      "duration_seconds": 1138,
+      "score": 0,
+      "level": "ACCEPTABLE"
+    },
+    {
       "timestamp": "2026-03-11T22:05:00",
       "task_id": "a00338fc8963af663",
       "direction": "类型约束",
