@@ -1,5 +1,5 @@
 {
-  "total_score": 20,
+  "total_score": 19,
   "runs": [
     {
       "timestamp": "2026-03-10T09:13:00",
@@ -210,13 +210,20 @@
       "duration_seconds": 2100,
       "score": 1,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:59:10.123034",
+      "direction": "工具设计",
+      "duration_seconds": 600,
+      "score": -1,
+      "level": "INSUFFICIENT"
     }
   ],
   "stats": {
-    "total_runs": 27,
+    "total_runs": 28,
     "excellent": 23,
     "acceptable": 0,
-    "insufficient": 5,
-    "total_duration_seconds": 51840
+    "insufficient": 6,
+    "total_duration_seconds": 52440
   }
 }

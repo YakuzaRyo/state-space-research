@@ -5,11 +5,6 @@
       "started_at": "2026-03-11T12:00:00",
       "is_deep_dive": true
     },
-    "aec398260fc4c673f": {
-      "direction": "10_tool_design",
-      "started_at": "2026-03-11T12:00:00",
-      "is_deep_dive": true
-    },
     "a9f4c2b8e1d5g6h3": {
       "direction": "04_deterministic_arch",
       "started_at": "2026-03-11T12:40:00",
@@ -29,9 +24,22 @@
       "direction": "08_llm_as_navigator",
       "started_at": "2026-03-11T12:40:00",
       "is_deep_dive": true
+    },
+    "e3g7h1k4d9b2f5c8": {
+      "direction": "12_engineering_roadmap",
+      "started_at": "2026-03-11T12:45:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "aec398260fc4c673f",
+      "direction": "10_tool_design",
+      "completed_at": "2026-03-11T12:45:00",
+      "duration_seconds": 600,
+      "score": -1,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a032897ce22c7bf45",
       "direction": "06_formal_verification",
@@ -188,9 +196,9 @@
     }
   ],
   "stats": {
-    "total_started": 26,
-    "total_completed": 22,
-    "total_score": 30
+    "total_started": 27,
+    "total_completed": 23,
+    "total_score": 19
   },
   "scheduler": {
     "enabled": true,
