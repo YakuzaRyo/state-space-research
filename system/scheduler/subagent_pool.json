@@ -24,6 +24,11 @@
       "direction": "06_formal_verification",
       "started_at": "2026-03-11T11:12:00",
       "is_deep_dive": true
+    },
+    "ae2510e5603404515": {
+      "direction": "04_deterministic_arch",
+      "started_at": "2026-03-11T11:20:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
@@ -111,7 +116,7 @@
     }
   ],
   "stats": {
-    "total_started": 16,
+    "total_started": 17,
     "total_completed": 10,
     "total_score": 18
   },
