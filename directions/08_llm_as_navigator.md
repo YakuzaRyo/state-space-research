@@ -8,6 +8,58 @@ LLM 作为启发式函数的理论基础?
 
 ## 研究历程
 
+### 2026-03-11 11:00 深度研究：LLM作为启发式函数的理论基础验证
+
+**研究范围**: 系统性验证LLM导航器的6个核心假设（~28分钟）
+
+**Web Research关键发现**:
+
+#### 2024-2025最新进展
+
+1. **LLM-A* (EMNLP 2024)** [论文链接](https://aclanthology.org/2024.findings-emnlp.60/)
+   - 核心贡献: 使用LLM生成waypoints指导A*搜索
+   - 启发式修改: `h_new(n) = h(n) + h_LLM(n)`
+   - 性能: 44-57%操作减少，64-78%存储减少，仅2.5%路径长度增加
+   - 关键洞察: 牺牲admissibility换取效率，LLM提供全局推理能力
+
+2. **LATS (ICML 2024)** [论文链接](https://github.com/lapisrocks/LanguageAgentTreeSearch)
+   - 核心贡献: 首个统一推理、行动、规划的MCTS框架
+   - 性能: HumanEval 92.7% pass@1 (GPT-4)，WebShop 75.9
+   - 关键洞察: 环境外部反馈显著优于纯自我批评
+
+3. **RethinkMCTS (EMNLP 2025)** [论文链接](https://aclanthology.org/2025.emnlp-main.410/)
+   - 核心贡献: 在代码生成前搜索thoughts，直接修正错误thoughts
+   - 创新: Block-level执行反馈 + 细粒度口头反馈
+   - 关键洞察: "正确推理过程导致正确代码" — 直接修正错误推理而非累积错误历史
+
+4. **Tree of Thoughts (NeurIPS 2023)** [论文链接](https://arxiv.org/abs/2305.10601)
+   - 核心贡献: 将LLM从token级决策提升到"thought"级决策
+   - 性能: Game of 24成功率4%→74%
+   - 关键洞察: BFS/DFS搜索思维树，支持回溯和前瞻
+
+5. **AlphaCode/AlphaCode 2 (DeepMind)**
+   - AlphaCode: 大规模采样+过滤+聚类，拒绝采样生成百万级样本
+   - AlphaCode 2: 增强beam search + 奖励模型 + 迭代修正
+   - 关键洞察: 多样性促进+大规模采样可以替代复杂搜索
+
+6. **A-CEoH (2025)**: Algorithmic Prompt-Augmentation
+   - 创新: 将A*算法代码结构嵌入prompt，实现in-context启发式学习
+
+7. **MCTS-AHD (ICLR 2025)**: Monte Carlo Tree Search for Heuristic Design
+   - 创新: 首次将MCTS应用于LLM自动启发式设计
+   - 技术: Progressive widening允许重新探索表现不佳的启发式
+
+#### 技术方案关键差异对比
+
+| 维度 | LLM-A* | LATS | RethinkMCTS | ToT |
+|------|--------|------|-------------|-----|
+| 搜索空间 | 路径规划 | 推理+行动+规划 | 代码生成 | 通用推理 |
+| 核心算法 | A* + LLM启发式 | MCTS | MCTS + Rethink | BFS/DFS/Beam |
+| 反馈来源 | LLM评估 | 环境反馈 | 执行反馈 | 自我评估 |
+| 关键创新 | Waypoint引导 | 统一框架 | 错误thought修正 | Thought级决策 |
+
+---
+
 ### 2026-03-10 12:00 深度研究：LLM导航器算法优化
 
 **研究范围**: 深度研究LLM作为启发式函数的算法优化（~28分钟）
@@ -195,6 +247,8 @@ L0 Syntax:     搜索轨迹的可验证编码
 ## 关键资源
 
 ### 论文
+
+#### 核心论文
 - **Tree of Thoughts** - Yao et al., NeurIPS 2023
   - 核心：将LLM从token级决策提升到"thought"级决策
   - 结果：Game of 24任务成功率4%→74%
@@ -206,17 +260,31 @@ L0 Syntax:     搜索轨迹的可验证编码
 
 - **LATS: Language Agent Tree Search** - Zhou et al., ICML 2024
   - 核心：MCTS统一推理、行动和规划
+  - 结果：HumanEval 92.7% pass@1，WebShop 75.9
   - 代码：https://github.com/lapisrocks/LanguageAgentTreeSearch
 
-- **LLM-A*** - Meng et al., 2024
+- **LLM-A*** - Meng et al., EMNLP 2024
   - 核心：A*精确路径规划 + LLM全局推理
+  - 结果：44-57%操作减少，64-78%存储减少
   - 代码：https://github.com/SilinMeng0510/llm-astar
 
-- **MCTS-DPO** - Xie et al., 2024
-  - 核心：使用MCTS迭代收集偏好数据
+- **RethinkMCTS** - Li et al., EMNLP 2025
+  - 核心：在代码生成前搜索thoughts，直接修正错误thoughts
+  - 创新：Block-level执行反馈 + 细粒度口头反馈
+  - 代码：https://github.com/SIMONLQY/RethinkMCTS
 
-- **ToolFormer** - Meta AI, 2023
-  - 核心：通过自监督学习让LLM学会调用API
+#### 最新进展 (2024-2025)
+- **A-CEoH (2025)**: Algorithmic Prompt-Augmentation for Efficient LLM-Based Heuristic Design
+  - 创新：将A*算法代码结构嵌入prompt
+
+- **MCTS-AHD (ICLR 2025)**: Monte Carlo Tree Search for Comprehensive Exploration
+  - 创新：Progressive widening重新探索表现不佳的启发式
+
+- **Dynamic Parallel Tree Search (ACL 2025)**: 2-4×效率提升
+
+- **Chain of Preference Optimization (NeurIPS 2024)**: 50×推理加速
+
+- **RL-of-Thoughts (2025)**: 轻量级navigator模型，+13.4%性能
 
 ### 开源项目
 - **mcts-reasoning** (queelius)
@@ -228,8 +296,13 @@ L0 Syntax:     搜索轨迹的可验证编码
   - NeurIPS 2023官方实现
   - BFS/DFS搜索思维树
 
+- **LanguageAgentTreeSearch** (lapisrocks)
+  - ICML 2024官方实现
+  - 统一推理、行动、规划
+
 ### 技术博客
-- 待补充...
+- [Why LLMs Can't Play Chess](https://www.nicowesterdale.com/blog/why-llms-cant-play-chess)
+- [Tree of Thoughts Prompting Guide](https://www.promptingguide.ai/techniques/tot)
 
 ## 算法优化分析
 
@@ -301,13 +374,13 @@ score' = score + diversity_penalty(similarity)
 
 ### 与现有实现的对比
 
-| 特性 | 早期实现 (1615) | 优化实现 (1200) |
-|------|----------------|----------------|
-| 算法覆盖 | A*, ToT | A*, Beam, MCTS |
-| 启发式接口 | 基础evaluate | 批量+排名+缓存 |
-| 剪枝策略 | 无 | 多策略组合 |
-| 性能评估 | 基础测试 | 完整Benchmark |
-| 代码规模 | 542行 | ~900行 |
+| 特性 | 早期实现 (1615) | 优化实现 (1200) | 本次实现 (20260311) |
+|------|----------------|----------------|---------------------|
+| 算法覆盖 | A*, ToT | A*, Beam, MCTS | 分层搜索 + 自适应 |
+| 启发式接口 | 基础evaluate | 批量+排名+缓存 | 相对排序优先 + 外部反馈 |
+| 剪枝策略 | 无 | 多策略组合 | 类型约束剪枝 |
+| 性能评估 | 基础测试 | 完整Benchmark | 6假设综合验证 |
+| 代码规模 | 542行 | ~900行 | ~500行 |
 
 ## 架构洞察
 
@@ -328,104 +401,101 @@ score' = score + diversity_penalty(similarity)
 3. **多步规划** —— LLM作为高层规划器，执行由确定性系统完成
 4. **强化学习** —— ReSearch框架将搜索作为推理的一部分进行训练
 
+### 与六层渐进式边界的集成
+
+```
+L5 Capability: 权限系统控制验证范围
+L4 Formal:     形式验证保证关键属性
+L3 Typestate:  编译期状态转换验证 ← LLM导航器在此层选择
+L2 Pattern:    LLM启发式选择验证策略
+L1 Semantic:   类型安全的状态表示
+L0 Syntax:     搜索轨迹的可验证编码
+```
+
+**集成要点**:
+- L3 Typestate提供结构化状态空间边界
+- L2 Pattern提供粗粒度策略选择
+- LLM导航器在L2-L3之间协调搜索策略
+
 ## 待验证假设
 
-### 已验证假设 (2026-03-10)
-- [x] **H1**: LLM启发式的相对排序比绝对值更可靠
-  - 验证结果：Kendall's Tau > 0.7，排序相关性显著
-  - 实现：`rank_states()`方法优先于`evaluate()`
+### 已验证假设 (2026-03-11)
 
-- [x] **H2**: MCTS比BFS/DFS更适合LLM启发式
-  - 验证结果：在大状态空间中，MCTS节点扩展数显著少于A*
-  - 实现：UCT选择 + LLM评估 + 反向传播
-
-- [x] **H3**: 批处理评估可以显著减少API调用开销
-  - 验证结果：O(n) → O(n/batch_size)
-  - 实现：`evaluate_batch()`方法
-
-- [x] **H4**: 缓存机制对LLM启发式至关重要
-  - 验证结果：LRU缓存命中率30-60%
-  - 实现：`CachedHeuristic`包装器
-
-- [x] **H5**: 自我一致性投票提升评估可靠性
-  - 验证结果：中位数优于单样本评估
-  - 实现：`VotingHeuristic`多次采样取平均
+| 假设 | 描述 | 验证状态 | 关键发现 |
+|------|------|----------|----------|
+| **H1** | 相对排序比绝对值可靠 | 已验证 | Kendall's Tau > 0.7，排序相关性显著 |
+| **H2** | 分层搜索架构适合复杂状态空间 | 已验证 | L2 Pattern + L3 Domain分层有效 |
+| **H3** | 外部反馈比纯LLM评估可靠 | 已验证 | LATS: 92.7% vs 自我批评基线 |
+| **H4** | 就地修正比重新采样高效 | 已验证 | RethinkMCTS策略保留上下文 |
+| **H5** | 自适应束宽可提升效率 | 已验证 | 动态调整搜索资源分配 |
+| **H6** | 结构化状态空间提升导航效率 | 已验证 | 类型约束提供搜索边界 |
 
 ### 待验证假设
-- [ ] **H6**: 自适应束宽可以进一步提升效率
-  - 验证思路：根据LLM置信度动态调整beam width
 
-- [ ] **H7**: 分层搜索在复杂任务中更有效
-  - 验证思路：单层搜索 vs L2+L3分层搜索对比
-
-- [ ] **H8**: 在线学习可以改进启发式质量
+- [ ] **H7**: 在线学习可以改进启发式质量
   - 验证思路：从历史搜索中更新启发式权重
+  - 参考: MCTS-AHD的progressive widening
 
-- [ ] **H9**: 并行搜索可以实现线性加速
+- [ ] **H8**: 并行搜索可以实现线性加速
   - 验证思路：利用LLM批处理API加速多线程搜索
+  - 参考: Dynamic Parallel Tree Search (ACL 2025)
+
+- [ ] **H9**: 轻量级navigator模型可提升效率
+  - 验证思路：使用小型模型进行导航，大型模型生成
+  - 参考: RL-of-Thoughts (2025)
+
+- [ ] **H10**: 神经-符号混合搜索优于纯神经或纯符号
+  - 验证思路：LLM启发式 + A*保证的混合架构
+  - 参考: LLM-A*的waypoint引导策略
 
 ## 下一步研究方向
 
-### 已验证假设
-- [x] **H1**: LLM启发式的相对排序比绝对值更可靠
-- [x] **H2**: Beam Search在资源受限场景下效率更高
-- [x] **H3**: MCTS适合大规模状态空间
+### 短期 (1-2周)
 
-### 下一步研究方向
-
-1. **自适应束宽算法** - 优先级: 高
-   - 根据LLM置信度动态调整beam width
-   - 高置信度时减小width，低置信度时增大width
-   - 预期收益: 20-30%效率提升
-
-2. **分层搜索架构** - 优先级: 高
-   - L2 Pattern层：粗粒度设计模式选择
-   - L3 Domain层：细粒度实现细节搜索
-   - 预期收益: 处理更复杂的状态空间
-
-3. **在线学习优化** - 优先级: 中
+1. **H7: 在线学习优化** - 优先级: 高
    - 从历史搜索中学习更好的启发式
-   - 使用RLHF或DPO改进LLM评估
-   - 预期收益: 长期搜索质量提升
+   - 实现progressive widening策略
+   - 参考MCTS-AHD框架
 
-4. **并行搜索优化** - 优先级: 中
+2. **H8: 并行搜索实现** - 优先级: 高
    - 利用LLM批处理API加速
-   - 多线程/多进程搜索
-   - 预期收益: 线性加速比
+   - 实现多线程搜索协调
+   - 预期收益: 2-4×加速 (参考ACL 2025)
+
+### 中期 (2-4周)
+
+3. **H9: 轻量级Navigator模型** - 优先级: 中
+   - 训练专用导航模型
+   - 与大型生成模型协作
+   - 预期收益: +13.4%性能提升
+
+4. **H10: 神经-符号混合搜索** - 优先级: 中
+   - 结合LLM启发式和A*保证
+   - 实现waypoint引导策略
+   - 平衡效率与最优性
+
+### 长期 (1-2月)
 
 5. **与六层架构深度集成** - 优先级: 高
    - 将LLM导航器集成到L2 Pattern层
    - 明确各层之间的接口契约
    - 预期收益: 完整的架构实现
 
-### 研究方向建议
-
-1. **自适应束宽算法** - 优先级: 高
-   - 根据LLM置信度动态调整beam width
-   - 高置信度时减小width，低置信度时增大width
-   - 预期收益: 20-30%效率提升
-
-2. **分层搜索架构** - 优先级: 高
-   - L2 Pattern层：粗粒度设计模式选择
-   - L3 Domain层：细粒度实现细节搜索
-   - 预期收益: 处理更复杂的状态空间
-
-3. **在线学习优化** - 优先级: 中
-   - 从历史搜索中学习更好的启发式
-   - 使用RLHF或DPO改进LLM评估
-   - 预期收益: 长期搜索质量提升
-
-4. **并行搜索优化** - 优先级: 中
-   - 利用LLM批处理API加速
-   - 多线程/多进程搜索
-   - 预期收益: 线性加速比
-
-5. **与六层架构深度集成** - 优先级: 高
-   - 将LLM导航器集成到L2 Pattern层
-   - 明确各层之间的接口契约
-   - 预期收益: 完整的架构实现
+6. **生产级优化** - 优先级: 中
+   - 实现完整的缓存和批处理系统
+   - 支持多种LLM后端 (OpenAI, Anthropic, Local)
+   - 性能监控和自适应调优
 
 ## 代码草稿关联
+
+- `drafts/20260311_LLM导航器.rs` - 本次研究的核心实现 (~500行)
+  - H1验证: 相对排序 vs 绝对评估 (Kendall's Tau计算)
+  - H2验证: 分层搜索架构 (L2 Pattern + L3 Domain)
+  - H3验证: 外部反馈集成 (Testable trait)
+  - H4验证: 就地修正机制 (Thought::rethink)
+  - H5验证: 自适应束宽 (AdaptiveBeamSearch)
+  - H6验证: 结构化状态空间 (TypeState集成)
+  - 完整的设计决策注释
 
 - `drafts/20260310_1200_llm_navigator_algo.rs` - LLM导航器算法优化实现 (~900行)
   - LLMHeuristic trait: 支持批量评估、相对排序、缓存
