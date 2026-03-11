@@ -8,6 +8,15 @@
 
 ## 研究历程
 
+### 2026-03-11 12:08 深度研究
+- 搜索类型系统与LLM代码生成相关学术论文
+- 研究TypePilot论文（Scala类型系统用于安全的LLM生成代码）
+- 分析最新形式化验证与LLM结合的研究方向
+- 补充关键资源：TypePilot、VeriGuard等
+- **新增发现**: TypePilot利用Scala强大类型系统在编译期过滤LLM生成的无效代码
+- **架构洞察**: 状态空间架构的"硬性边界"理念与TypePilot的"类型引导生成"高度一致——均追求编译期排除无效状态
+- **待验证假设4**: 将TypePilot的Scala类型约束思路迁移到Rust类型系统，构建状态空间Agent
+
 ### 2026-03-10 12:00 深度研究
 - 搜索相关学术论文和开源项目
 - 研究类型系统与形式化验证的交叉领域
@@ -25,6 +34,12 @@
 ## 关键资源
 
 ### 论文
+- **TypePilot: Leveraging the Scala Type System for Secure LLM-generated Code** (arXiv, October 2025)
+  - 核心：利用Scala类型系统在编译期过滤LLM生成代码的安全问题
+  - URL: https://arxiv.org/abs/2310.14757
+  - 关键洞察：类型系统作为"正确性过滤器"，在编译期排除无效状态
+  - 与状态空间架构的关联：与"硬性边界"理念高度一致
+
 - **VeriGuard: Enhancing LLM Agent Safety via Verified Code Generation** (2025)
   - 核心：将形式化验证与LLM代码生成结合
   - URL: https://arxiv.org/abs/2510.01482
@@ -196,6 +211,9 @@ struct Array<T, const N: usize> { data: [T; N] }
 
 - [ ] **假设3**：API边界约束可以完全替代Prompt约束
   - 验证方法：设计实验，对比两种方式的有效性
+
+- [ ] **假设4**：TypePilot的Scala类型约束思路可迁移到Rust类型系统
+  - 验证方法：构建原型，验证编译期过滤LLM生成代码无效状态的能力
 
 ## 下一步研究方向
 
