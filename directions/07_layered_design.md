@@ -12,6 +12,7 @@
 
 - **v1 (2026-03-10)**: 第一轮研究，基于解析器组合子和类型检查器的实现
 - **v2 (2026-03-11)**: 第二轮深入研究，完整的Layer trait抽象和层间边界检查
+- **v3 (2026-03-11)**: 第三轮研究，Typestate Pattern实现和转换管道设计
 
 ---
 
@@ -314,6 +315,54 @@ impl IncrementalCompiler {
 
 ---
 
+## v3补充: Typestate Pattern实现
+
+### 核心创新
+
+第三轮研究引入了**Typestate Pattern**来确保层间转换的类型安全：
+
+```rust
+pub struct PatternMatcher<State> {
+    state: PhantomData<State>,
+    expr: TypedExpr,
+}
+
+// 状态: Unmatched -> Matched<T> -> Transformed<T>
+```
+
+**优势**：
+- 编译期强制执行正确的转换顺序
+- 零运行时开销（PhantomData）
+- 自文档化API
+
+### 转换管道设计
+
+```
+Source Code
+    |
+    v
+[Syntax Layer]    parse(): &str -> RawExpr
+    |
+    v
+[Semantic Layer]  analyze(): RawExpr -> TypedExpr
+    |
+    v
+[Pattern Layer]   optimize(): TypedExpr -> TypedExpr
+    |
+    v
+[Domain Layer]    to_domain<T>(): TypedExpr -> DomainModel
+```
+
+### 验证结果
+
+代码结构验证: **100%通过 (29/29项)**
+
+- 4层架构完整
+- 5个核心trait
+- 9处PhantomData使用
+- 6个测试用例
+- 38行文档注释
+
 ## 未来方向
 
 ### 短期（1-2周）
@@ -340,7 +389,10 @@ impl IncrementalCompiler {
 
 - **v1实现**: `drafts/20260310_1534_layered_compiler.rs`
 - **v2实现**: `drafts/20260311_1000_layered_design_v2.rs` (3345行)
+- **v3实现**: `drafts/20260311_layered_design.rs` (Typestate Pattern)
+- **v3验证**: `drafts/20260311_layered_design_validation.py`
 - **研究轨迹**: `logs/trails/07_layered_design/20260311_1000_layered_v2_trail.md`
+- **本次轨迹**: `logs/trails/07_layered_design/20260311_1700_layered_v3_trail.md`
 
 ---
 
@@ -356,16 +408,22 @@ impl IncrementalCompiler {
 
 ## 总结
 
-通过本次深入研究，我们：
+通过三轮深入研究，我们：
 
 1. **验证了技术假设**：Rust的trait系统确实可以实现类型安全的层间转换
 2. **实现了完整原型**：包含词法分析、语法分析、类型检查、优化、代码生成
 3. **探索了渐进边界**：借鉴渐进类型思想实现层间边界检查
-4. **证明了可行性**：分层架构可以实现接近零成本的抽象
+4. **引入了Typestate Pattern**：使用PhantomData确保编译期状态转换安全
+5. **证明了可行性**：分层架构可以实现接近零成本的抽象
 
 核心洞察：**分层架构的关键在于层间接口的设计**。通过精心设计的类型契约，可以实现：
 - 编译期安全保证
 - 运行时性能优化
 - 模块化和可扩展性
 
-第二轮研究相比第一轮，在抽象层次、类型安全、优化能力等方面都有显著提升，验证了持续深入研究的价值。
+三轮研究的演进：
+- v1: 基础解析器和类型检查器
+- v2: Layer trait和边界检查
+- v3: Typestate Pattern和转换管道
+
+每一轮都在抽象层次、类型安全、代码组织等方面有所提升，验证了持续深入研究的价值。

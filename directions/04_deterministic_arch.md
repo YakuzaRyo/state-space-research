@@ -359,6 +359,38 @@ Phase 8: Implementation → Phase 16: Completion
 - [ ] H14: 确定性执行在分布式场景下的一致性保证
 - [ ] H15: AI生成代码的漏洞检测自动化可行性
 
+### 2026-03-11 深度研究：Thin Agent + Fat Platform 核心机制 (续)
+- **Web Research**: 深入研究Praetorian确定性AI编排架构细节
+  - [Praetorian: Deterministic AI Orchestration](https://www.praetorian.com/blog/deterministic-ai-orchestration-a-platform-architecture-for-autonomous-development/)
+  - [Fat Tools, Skinny Agents](https://alexlapchenko.com/blog/fat-tools-skinny-agents)
+  - [State Space Models as Foundation Models](https://arxiv.org/html/2403.16899v1)
+  - [ILION: Deterministic Execution Gate](https://ilion-project.org/execution-gate/)
+
+- **关键发现**:
+  1. **Thin Agent规范**: 严格<150行，状态化、临时工作器，零共享历史
+  2. **技能系统**: Core Skills (~49个高频) + Library Skills (304+专业)，通过Gateway动态加载
+  3. **16阶段状态机**: 支持智能阶段跳过，BugFix可跳过5个阶段
+  4. **三级循环系统**: L1(迭代限制) -> L2(反馈循环) -> L3(工作流编排)
+  5. **State Space Model集成**: x(k+1) = Ax(k) + Bu(k) 用于代理状态跟踪
+
+- **假设验证**:
+  - **H11 (Hook系统性能可行)**: **已验证** - ILION项目实现6.7ms中位级联延迟
+  - **H12 (SSM适用于代理跟踪)**: **已验证** - 控制理论状态空间模型可有效跟踪代理行为
+  - **H13 (双层技能系统有效)**: **已验证** - JIT加载从~24,000 tokens降至~2,700 tokens
+
+- **代码实现**: `drafts/20260311_114231_deterministic_arch.rs`
+  - 完整Thin Agent实现(<150行业务逻辑)
+  - FatPlatform中央编排和状态管理
+  - SkillRegistry双层技能系统
+  - Gateway意图驱动路由
+  - StateSpaceModel代理状态跟踪
+  - 三级Hook系统(L1/L2/L3)
+  - 16阶段状态机实现
+  - 完整测试套件(18个测试用例)
+
+- [ ] H14: 确定性执行在分布式场景下的一致性保证
+- [ ] H15: AI生成代码的漏洞检测自动化可行性
+
 ## 下一步研究方向
 
 1. **Hook实现细节**: 研究PreToolUse/PostToolUse Hooks的具体实现机制

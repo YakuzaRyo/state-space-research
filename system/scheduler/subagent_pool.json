@@ -1,10 +1,5 @@
 {
   "active_agents": {
-    "a7dbc7b501f8658b1": {
-      "direction": "02_refinement_calculus",
-      "started_at": "2026-03-11T15:46:00",
-      "is_deep_dive": true
-    },
     "a2f1dc3b89e8d3a0e": {
       "direction": "04_deterministic_arch",
       "started_at": "2026-03-11T15:46:00",
@@ -13,11 +8,6 @@
     "ac5364ec1fa0d6b69": {
       "direction": "05_type_constraints",
       "started_at": "2026-03-11T15:46:00",
-      "is_deep_dive": true
-    },
-    "a07fcd73f9b3090b4": {
-      "direction": "07_layered_design",
-      "started_at": "2026-03-11T16:00:00",
       "is_deep_dive": true
     },
     "a5d26aa457cef95a4": {
@@ -29,9 +19,35 @@
       "direction": "12_engineering_roadmap",
       "started_at": "2026-03-11T16:00:00",
       "is_deep_dive": true
+    },
+    "a3b5f522800640a69": {
+      "direction": "01_core_principles",
+      "started_at": "2026-03-11T17:00:00",
+      "is_deep_dive": true
+    },
+    "a7bd31da36a27cabf": {
+      "direction": "03_structured_generation",
+      "started_at": "2026-03-11T17:00:00",
+      "is_deep_dive": true
     }
   },
   "completed_runs": [
+    {
+      "agent_id": "a7dbc7b501f8658b1",
+      "direction": "02_refinement_calculus",
+      "completed_at": "2026-03-11T17:00:00",
+      "duration_seconds": 2280,
+      "score": 2,
+      "is_deep_dive": true
+    },
+    {
+      "agent_id": "a07fcd73f9b3090b4",
+      "direction": "07_layered_design",
+      "completed_at": "2026-03-11T17:00:00",
+      "duration_seconds": 2460,
+      "score": 2,
+      "is_deep_dive": true
+    },
     {
       "agent_id": "a6c81c857ac864661",
       "direction": "01_core_principles",
@@ -340,9 +356,9 @@
     }
   ],
   "stats": {
-    "total_started": 48,
-    "total_completed": 41,
-    "total_score": 44
+    "total_started": 50,
+    "total_completed": 43,
+    "total_score": 48
   },
   "scheduler": {
     "enabled": true,
