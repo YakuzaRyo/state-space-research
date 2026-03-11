@@ -1,5 +1,5 @@
 {
-  "total_score": 10,
+  "total_score": 12,
   "runs": [
     {
       "timestamp": "2026-03-10T09:13:00",
@@ -112,13 +112,29 @@
       "duration_seconds": 1800,
       "score": 2,
       "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:50:00",
+      "task_id": "a6bc4ca062bc47bd5",
+      "direction": "对比分析(重研)",
+      "duration_seconds": 2100,
+      "score": 2,
+      "level": "EXCELLENT"
+    },
+    {
+      "timestamp": "2026-03-11T10:57:00",
+      "task_id": "aa107960de63bcbac",
+      "direction": "核心原则(重研)",
+      "duration_seconds": 3000,
+      "score": 2,
+      "level": "EXCELLENT"
     }
   ],
   "stats": {
-    "total_runs": 14,
-    "excellent": 12,
+    "total_runs": 16,
+    "excellent": 14,
     "acceptable": 0,
     "insufficient": 3,
-    "total_duration_seconds": 24060
+    "total_duration_seconds": 29160
   }
 }
