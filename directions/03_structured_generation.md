@@ -505,7 +505,70 @@ pub mod type_state {
 8. **增量编译**: 支持grammar的动态更新
 
 ## 代码草稿
+- [drafts/20260311_structured_gen_v3.rs](../drafts/20260311_structured_gen_v3.rs) - 第四轮深入研究 - XGrammar核心Rust实现验证 (1934行)
 - [drafts/20260311_结构化生成.rs](../drafts/20260311_结构化生成.rs) - 第三轮深入研究 - XGrammar 2完整实现 (约600行)
 - [drafts/20260311_1000_structured_gen_v2.rs](../drafts/20260311_1000_structured_gen_v2.rs) - 第二轮深入研究 (1918行)
 - [drafts/20260310_1431_structured_generation.rs](../drafts/20260310_1431_structured_generation.rs) - XGrammar核心Rust实现
 - [drafts/20260310_1750_structured_generation.rs](../drafts/20260310_1750_structured_generation.rs) - PDA约束生成验证
+
+### 2026-03-11 11:25 第四轮深入研究 (v3验证)
+**研究范围**: XGrammar核心机制Rust实现验证
+
+#### 实现验证结果
+
+**1. DynamicBitset内存优化验证**
+- 128K词汇表存储: 16KB (vs 128KB for bool[])
+- 压缩率: 8x
+- 支持AND/OR/NOT位操作
+
+**2. EBNF解析器验证**
+- 支持基本EBNF语法、字符类、重复、分组
+- JSON语法解析测试通过
+
+**3. PDA引擎验证**
+- 持久栈实现O(1)回滚
+- 括号匹配测试: 有效/无效输入均正确识别
+- Token到字符映射支持
+
+**4. JSON Schema验证器验证**
+- 类型验证: string/integer/number/boolean/array/object
+- 必需字段检查
+- 范围验证(minimum/maximum)
+
+**5. Token Mask Cache验证**
+- 状态到mask映射
+- 缓存命中率统计
+- 内存占用估算
+
+**6. 端到端约束生成验证**
+- 模拟token序列验证
+- 实时允许token集合计算
+- PDA状态转换验证
+
+#### 假设验证更新
+
+| 假设 | 验证状态 | 置信度 |
+|------|----------|--------|
+| EBNF约束保证格式正确 | 已验证 | 高 |
+| Rust高效实现可行 | 已验证 | 高 |
+| 约束检查开销低 | 理论验证 | 中-高 |
+| 广泛适用性 | 已验证 | 高 |
+
+#### 代码结构
+
+```
+drafts/structured_gen_v3/
+├── Cargo.toml
+└── src/
+    ├── lib.rs           # 核心类型和ConstraintGenerator
+    ├── token_mask.rs    # DynamicBitset, TokenClassifier, TokenMaskCache
+    ├── ebnf_parser.rs   # EBNF语法解析器
+    ├── pda_engine.rs    # 下推自动机实现
+    ├── json_validator.rs # JSON Schema验证器
+    └── main.rs          # 测试和验证
+```
+
+**总代码量**: 1934行Rust代码
+
+#### 轨迹日志
+- [logs/trails/03_structured_generation/20260311_1125_structured_v3_trail.md](logs/trails/03_structured_generation/20260311_1125_structured_v3_trail.md)

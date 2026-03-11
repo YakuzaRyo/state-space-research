@@ -8,6 +8,116 @@
 
 ## 研究历程
 
+### 2026-03-11 14:25 深度研究（第八轮）：Typestate模式与Phantom Types核心验证
+
+**研究范围**: 验证Typestate模式和Phantom Types如何实现"让错误在设计上不可能发生"
+
+**核心问题**:
+1. 状态空间架构如何通过类型系统消除运行时错误？
+2. Rust中如何实现"Make illegal states unrepresentable"？
+3. 类型安全的代价是什么？
+4. 适用于什么场景？
+
+**Web研究发现**:
+
+| 资源 | 关键洞察 | 与本研究关联 |
+|------|---------|-------------|
+| [Rust Typestate Pattern (DeveloperLife 2024)](http://developerlife.com/2024/05/28/typestate-pattern-rust/) | 状态作为独立struct，转换时消耗旧状态 | 核心实现参考 |
+| [Typestate Pattern (Farazdagi 2024)](https://farazdagi.com/posts/2024-04-07-typestate-pattern/) | "运行时状态在编译期由类型强制执行" | 理论定义 |
+| [Make Illegal States Unrepresentable (Functional Architecture)](https://functional-architecture.org/make_illegal_states_unrepresentable/) | Yaron Minsky 2010年提出的核心概念 | 概念起源 |
+| [Phantom Types in Rust (GreyBlake)](https://www.greyblake.com/blog/phantom-types-in-rust/) | 使用PhantomData进行状态标记 | 实现技术 |
+| [Stanford CS 242](https://stanford-cs242.github.io/f18/lectures/07-1-sergio.html) | Osmium: 状态机作为类型的完美编码 | 学术研究 |
+| [Affine Rust with Session Types (ECOOP 2022)](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2022.4) | 多党派会话类型的Rust实现 | 协议验证 |
+
+**关键引用**:
+
+> "The difference between these two sets is the set of invalid states: the data which a program can represent but does not know how to handle properly. This is where bugs occur." — GeekLaunch, 2023
+
+> "A pattern where object's run-time state is encoded in, and thus is enforced — at compile time — by the object's type" — Farazdagi, 2024
+
+**代码验证**: `drafts/20260311_core_principles_v3.rs` (450+行)
+
+实现了三个核心模式：
+1. **基础Typestate** - 文件状态机（Created→OpenForRead/OpenForWrite→Closed）
+2. **高级状态机** - 连接状态机（含重试逻辑、失败处理）
+3. **协议状态机** - HTTP请求/响应协议顺序强制
+
+**假设验证结果**:
+
+| 假设 | 结果 | 关键证据 |
+|------|------|---------|
+| 技术假设: 状态空间架构消除运行时错误 | ✅ 通过 | 无效状态转换在编译期被拒绝，如未打开文件读取、未连接发送数据等 |
+| 实现假设: Rust实现"Make illegal states unrepresentable" | ✅ 通过 | Typestate+PhantomData模式，状态作为类型参数，无效操作无对应方法 |
+| 性能假设: 类型安全是零成本的 | ✅ 通过 | PhantomData是ZST（零大小类型），编译后无运行时开销 |
+| 适用性假设: 适用于状态机、协议验证、资源管理 | ✅ 通过 | 文件、连接、协议三个场景均验证有效 |
+
+**核心代码模式**:
+
+```rust
+// 状态标记类型
+pub struct Created;
+pub struct OpenForRead;
+pub struct Closed;
+
+// 泛型结构，状态编码为类型参数
+pub struct File<State> {
+    path: String,
+    _state: PhantomData<State>,  // 零成本状态标记
+}
+
+// 只有Created状态可以创建
+impl File<Created> {
+    pub fn new(path: &str) -> Self { ... }
+    pub fn open_for_read(self) -> File<OpenForRead> { ... }
+}
+
+// 只有OpenForRead状态可以读取
+impl File<OpenForRead> {
+    pub fn read(&self) -> String { ... }
+    pub fn close(self) -> File<Closed> { ... }
+}
+
+// 编译错误示例：
+// let file = File::new("test.txt");
+// file.read();  // 错误：File<Created>没有read方法
+// file.close(); // 错误：File<Created>没有close方法
+```
+
+**编译期错误捕获演示**:
+
+| 错误类型 | 运行时检查方案 | Typestate方案 | 结果 |
+|---------|---------------|---------------|------|
+| 未打开就读取 | if-statement + panic/Error | 编译错误：方法不存在 | ✅ 编译期捕获 |
+| 未连接就发送 | assert! + 运行时检查 | 编译错误：方法不存在 | ✅ 编译期捕获 |
+| 跳过协议步骤 | 运行时状态验证 | 编译错误：类型不匹配 | ✅ 编译期捕获 |
+| 重复关闭文件 | 运行时标记检查 | 值已move，无法再次使用 | ✅ 编译期捕获 |
+
+**零成本抽象验证**:
+
+```rust
+use std::mem::size_of;
+
+// File<Created>大小 == String大小
+assert_eq!(size_of::<File<Created>>(), size_of::<String>());
+// PhantomData<Created>是零大小类型
+assert_eq!(size_of::<PhantomData<Created>>(), 0);
+```
+
+**新发现**:
+1. **类型系统即文档**：状态转换通过方法签名自描述
+2. **消耗性转换**：self被消耗，防止重复状态转换
+3. **Result类型结合**：状态转换失败可返回错误状态类型
+4. **Builder模式本质**：Builder是Typestate的特例
+
+**局限性与未来方向**:
+1. 类型状态在序列化后丢失，需要运行时schema验证补充
+2. 复杂状态机可能产生复杂的类型签名
+3. 动态状态（运行时才能确定）无法使用Typestate
+
+**轨迹日志**: `logs/trails/01_core_principles/20260311_1425_core_v3_trail.md`
+
+---
+
 ### 2026-03-11 11:27 深度研究（第七轮）：核心原则综合验证与2025-2026前沿整合
 
 **研究范围**: 整合2025-2026年最新研究成果，验证六层渐进式边界模型的有效性
@@ -635,6 +745,7 @@ struct Array<T, const N: usize> { data: [T; N] }
   - 验证方法：在 drafts/ 中实现状态机原型 ✅ `20260309_1645_rust_typestate.rs`
   - 结果：Typestate模式能有效约束状态转换，但需要PhantomData标记，有一定 boilerplate
   - **2026-03-11更新**：通过 `drafts/20260311_核心原则.rs` 完整验证了Mealy/Moore状态机表达
+  - **2026-03-11(2)更新**：通过 `drafts/20260311_core_principles_v3.rs` 验证了Typestate+PhantomData核心模式
 
 - [x] **假设2**：形式化验证成本与安全收益的权衡点
   - 验证方法：对比 Verus vs 运行时测试的投入产出
@@ -735,6 +846,11 @@ struct Array<T, const N: usize> { data: [T; N] }
   - 包含：六层渐进式边界完整实现、Typestate+Capability组合、业务状态机
   - 整合：2025-2026年最新研究成果（Miri、THRUST、CAPsLock、AutoVerus）
   - 轨迹：`logs/trails/01_core_principles/20260311_1127_agent_trail.md`
+
+- `drafts/20260311_core_principles_v3.rs` - Typestate与Phantom Types核心验证（第八轮）
+  - 包含：文件状态机、连接状态机、协议状态机三个核心模式
+  - 验证：Typestate+PhantomData零成本抽象、编译期错误捕获
+  - 轨迹：`logs/trails/01_core_principles/20260311_1425_core_v3_trail.md`
 
 ---
 
