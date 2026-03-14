@@ -21,6 +21,7 @@ class ResearchScore:
     code_quality: float         # 代码质量 (0-30)
     references: int             # 引用数量
     new_hypotheses: int         # 新假设数量
+    verified_hypotheses: int     # 已验证假设数量
     details: Dict[str, str]     # 详细评分说明
 
 
@@ -166,6 +167,27 @@ def count_new_hypotheses(content: str) -> int:
     return max(0, total_hypotheses - total_completed)
 
 
+def count_verified_hypotheses(content: str) -> int:
+    """统计已验证的假设数量 ([x] 格式)"""
+    hypotheses_sections = re.findall(
+        r'(#{1,3}\s*待验证假设)(.*?)(?=#{1,3}\s*[^#]|$)',
+        content,
+        re.DOTALL
+    )
+
+    if not hypotheses_sections:
+        return 0
+
+    total_verified = 0
+    for section in hypotheses_sections:
+        section_text = section[1]
+        # 统计已完成的假设 [x]
+        verified = len(re.findall(r'\[x\]', section_text, re.IGNORECASE))
+        total_verified += verified
+
+    return total_verified
+
+
 def evaluate_research产出(research_dir: str = ".") -> ResearchScore:
     """
     主评估函数
@@ -174,7 +196,8 @@ def evaluate_research产出(research_dir: str = ".") -> ResearchScore:
     - 文档质量: 0-40分
     - 代码质量: 0-30分
     - 引用数量: 0-15分 (每引用得1分，上限15)
-    - 创新性: 0-15分 (每个新假设得3分，上限15)
+    - 创新性: 0-10分 (每个新假设得2分，上限10)
+    - 验证性: 0-10分 (每个已验证假设得3分，上限10)
     """
     base_path = Path(research_dir)
 
@@ -207,10 +230,14 @@ def evaluate_research产出(research_dir: str = ".") -> ResearchScore:
 
     # 4. 创新性 - 新假设 (15分)
     hypo_count = count_new_hypotheses(total_content)
-    hypothesis_score = min(hypo_count * 3, 15)
+    hypothesis_score = min(hypo_count * 2, 10)
+
+    # 5. 验证性 - 已验证假设 (10分)
+    verified_count = count_verified_hypotheses(total_content)
+    verified_score = min(verified_count * 3, 10)
 
     # 总分
-    total = doc_quality + code_quality + reference_score + hypothesis_score
+    total = min(100, doc_quality + code_quality + reference_score + hypothesis_score + verified_score)
 
     return ResearchScore(
         total_score=total,
@@ -218,11 +245,13 @@ def evaluate_research产出(research_dir: str = ".") -> ResearchScore:
         code_quality=code_quality,
         references=ref_count,
         new_hypotheses=hypo_count,
+        verified_hypotheses=verified_count,
         details={
             "doc_breakdown": f"文档质量: {doc_quality:.1f}/40",
             "code_breakdown": f"代码质量: {code_quality:.1f}/30 ({len(compilable)}个可编译)",
             "ref_breakdown": f"引用数量: {ref_count} ({reference_score}分)",
-            "hypo_breakdown": f"新假设: {hypo_count} ({hypothesis_score}分)"
+            "hypo_breakdown": f"新假设: {hypo_count} ({hypothesis_score}分)",
+            "verified_breakdown": f"已验证: {verified_count} ({verified_score}分)"
         }
     )
 
@@ -237,7 +266,8 @@ def print_score(score: ResearchScore):
     print(f"文档质量: {score.doc_quality:.1f}/40")
     print(f"代码质量: {score.code_quality:.1f}/30")
     print(f"引用数量: {score.references} ({min(score.references, 15)}分)")
-    print(f"新假设: {score.new_hypotheses} ({min(score.new_hypotheses * 3, 15)}分)")
+    print(f"新假设: {score.new_hypotheses} ({min(score.new_hypotheses * 2, 10)}分)")
+    print(f"已验证: {score.verified_hypotheses} ({min(score.verified_hypotheses * 3, 10)}分)")
     print("-" * 50)
     print("评分详情:")
     for key, val in score.details.items():

@@ -1,0 +1,3 @@
+commit	score	doc_quality	code_quality	references	hypotheses	verified	status	description
+8621aa5	88.0	40.0	30.0	149	1	0	keep	baseline - 初始评估
+d81b182	100.0	40.0	30.0	149	33	8	keep	test: 验证评估流程 - 分数从88提升到100
