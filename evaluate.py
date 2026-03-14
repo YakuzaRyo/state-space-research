@@ -142,23 +142,28 @@ def count_references(content: str) -> int:
 
 def count_new_hypotheses(content: str) -> int:
     """统计新提出的假设数量"""
-    # 查找待验证假设部分
-    hypotheses_section = re.search(
-        r'(## 待验证假设|待验证假设)(.*?)(?=##|$)',
+    # 查找所有待验证假设部分 (匹配 ## 或 ### 标题)
+    hypotheses_sections = re.findall(
+        r'(#{1,3}\s*待验证假设)(.*?)(?=#{1,3}\s*[^#]|$)',
         content,
         re.DOTALL
     )
 
-    if not hypotheses_section:
+    if not hypotheses_sections:
         return 0
 
-    section_text = hypotheses_section.group(2)
-    # 统计 [ ] 或 - [ ] 格式的假设
-    hypotheses = re.findall(r'[-\[]\s*\]', section_text)
-    # 统计已完成的假设
-    completed = len(re.findall(r'\[x\]', section_text))
+    total_hypotheses = 0
+    total_completed = 0
 
-    return max(0, len(hypotheses) - completed)
+    for section in hypotheses_sections:
+        section_text = section[1]  # group(2)
+        # 统计 [ ] 或 - [ ] 格式的假设
+        hypotheses = re.findall(r'[-\[]\s*\]', section_text)
+        total_hypotheses += len(hypotheses)
+        # 统计已完成的假设
+        total_completed += len(re.findall(r'\[x\]', section_text))
+
+    return max(0, total_hypotheses - total_completed)
 
 
 def evaluate_research产出(research_dir: str = ".") -> ResearchScore:
