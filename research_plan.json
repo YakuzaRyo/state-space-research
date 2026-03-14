@@ -1,0 +1,164 @@
+{
+  "version": "2.0",
+  "name": "状态空间架构研究计划",
+  "description": "深入探索状态空间架构作为下一代 AI 工程系统的理论基础与实现路径",
+
+  "research_goal": "通过程序框架（Rust类型系统）强制定义边界，让 AI 的产出一定遵循预先定义好的规范",
+
+  "directions": {
+    "core_principles": {
+      "id": "01",
+      "name": "核心原则",
+      "question": "如何让错误在设计上不可能发生?",
+      "file": "directions/01_core_principles.md",
+      "hours": [0, 12],
+      "topics": [
+        "状态空间的代数结构定义（闭合性、完备性）",
+        "与类型理论、范畴论的关系",
+        "不变量(Invariant)的形式化表达",
+        "与形式验证(Formal Verification)的结合点"
+      ]
+    },
+    "layered_design": {
+      "id": "07",
+      "name": "分层设计",
+      "question": "Syntax→Semantic→Pattern→Domain如何转换?",
+      "file": "directions/07_layered_design.md",
+      "hours": [2, 14],
+      "topics": [
+        "语法层(Syntax Space)的约束机制",
+        "语义层(Semantic Space)的类型系统",
+        "设计模式层(Pattern Space)的组合规则",
+        "业务逻辑层(Domain Space)的领域建模"
+      ]
+    },
+    "llm_navigator": {
+      "id": "08",
+      "name": "LLM导航器",
+      "question": "LLM作为启发式函数的理论基础?",
+      "file": "directions/08_llm_as_navigator.md",
+      "hours": [4, 16],
+      "topics": [
+        "从'生成器'到'导航器'的范式转换",
+        "LLM 作为启发式函数(Heuristic)的理论基础",
+        "搜索算法与 LLM 的结合模式",
+        "多步规划与路径验证"
+      ]
+    },
+    "rust_type_system": {
+      "id": "09",
+      "name": "实现技术",
+      "question": "如何用Rust类型系统实现状态空间?",
+      "file": "directions/09_rust_type_system.md",
+      "hours": [6, 18],
+      "topics": [
+        "状态空间的表示与存储",
+        "状态转换的确定性保证",
+        "不变量的运行时检查",
+        "沙盒隔离与物理约束"
+      ]
+    },
+    "tool_design": {
+      "id": "10",
+      "name": "工具设计",
+      "question": "如何设计'无法产生错误'的工具?",
+      "file": "directions/10_tool_design.md",
+      "hours": [8, 20],
+      "topics": [
+        "纯函数工具设计",
+        "类型安全的API边界",
+        "ToolToken权限系统",
+        "工具链组合与事务性"
+      ]
+    },
+    "comparison": {
+      "id": "11",
+      "name": "对比分析",
+      "question": "Claude Code/OpenCode的根本缺陷是什么?",
+      "file": "directions/11_comparison.md",
+      "hours": [10, 22],
+      "topics": [
+        "Claude Code权限系统分析",
+        "状态空间 vs 软约束",
+        "硬边界实现方案",
+        "安全性对比"
+      ]
+    }
+  },
+
+  "evaluation": {
+    "total_score": 100,
+    "metrics": {
+      "doc_quality": {
+        "weight": 40,
+        "checks": [
+          "核心问题",
+          "研究发现",
+          "架构洞察",
+          "待验证假设"
+        ]
+      },
+      "code_quality": {
+        "weight": 30,
+        "checks": [
+          "可编译性",
+          "核心类型(struct/trait/enum/impl)",
+          "关键模式(ToolState/ToolToken/ToolChain)"
+        ]
+      },
+      "references": {
+        "weight": 15,
+        "per_item": 1,
+        "max": 15
+      },
+      "innovation": {
+        "weight": 10,
+        "per_hypothesis": 2,
+        "max": 10
+      },
+      "verification": {
+        "weight": 10,
+        "per_verified": 3,
+        "max": 10
+      }
+    }
+  },
+
+  "output_format": {
+    "required_sections": [
+      "核心问题",
+      "研究发现",
+      "架构洞察",
+      "待验证假设",
+      "下一步研究方向"
+    ],
+    "optional_sections": [
+      "关键资源",
+      "代码草稿"
+    ],
+    "hypothesis_markdown": {
+      "pending": "- [ ] ",
+      "verified": "- [x] "
+    }
+  },
+
+  "time_budget": {
+    "research_interval_minutes": 30,
+    "research_time_minutes": 25,
+    "min_threshold_percent": 75,
+    "max_threshold_percent": 80
+  },
+
+  "scoring_rules": {
+    "insufficient": {
+      "below_percent": 75,
+      "score_change": -1,
+      "reason": "研究不充分"
+    },
+    "good": {
+      "above_percent": 80,
+      "score_change": 1,
+      "reason": "研究深入"
+    }
+  }
+}

@@ -22,45 +22,25 @@ TIME_TAG=$(date +%H%M)
 echo -e "${GREEN}[INFO]${NC} 当前时间: $DATE $(date +%H:%M)"
 echo -e "${GREEN}[INFO]${NC} Hour: $HOUR"
 
-# 确定研究方向
-case $HOUR in
-    00|12)
-        DIRECTION="核心原则"
-        DOC="01_core_principles.md"
-        QUESTION="如何让错误在设计上不可能发生?"
-        ;;
-    02|14)
-        DIRECTION="分层设计"
-        DOC="07_layered_design.md"
-        QUESTION="Syntax→Semantic→Pattern→Domain如何转换?"
-        ;;
-    04|16)
-        DIRECTION="LLM导航器"
-        DOC="08_llm_as_navigator.md"
-        QUESTION="LLM作为启发式函数的理论基础?"
-        ;;
-    06|18)
-        DIRECTION="实现技术"
-        DOC="09_rust_type_system.md"
-        QUESTION="如何用Rust类型系统实现状态空间?"
-        ;;
-    08|20)
-        DIRECTION="工具设计"
-        DOC="10_tool_design.md"
-        QUESTION="如何设计'无法产生错误'的工具?"
-        ;;
-    10|22)
-        DIRECTION="对比分析"
-        DOC="11_comparison.md"
-        QUESTION="Claude Code/OpenCode的根本缺陷是什么?"
-        ;;
-    *)
-        # 默认研究方向
-        DIRECTION="综合研究"
-        DOC="10_tool_design.md"
-        QUESTION="深入研究工具设计"
-        ;;
-esac
+# 从 JSON 配置文件加载研究方向
+DIRECTION_INFO=$(python3 -c "
+import json
+import sys
+hour = $HOUR
+with open('research_plan.json', 'r') as f:
+    plan = json.load(f)
+    for d in plan['directions'].values():
+        if hour in d['hours']:
+            print(d['name'] + '|' + d['file'] + '|' + d['question'])
+            sys.exit(0)
+    # 默认
+    d = list(plan['directions'].values())[0]
+    print(d['name'] + '|' + d['file'] + '|' + d['question'])
+")
+
+DIRECTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f1)
+DOC=$(echo "$DIRECTION_INFO" | cut -d'|' -f2)
+QUESTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f3)
 
 echo -e "${YELLOW}[INFO]${NC} 研究方向: $DIRECTION"
 echo -e "${YELLOW}[INFO]${NC} 核心问题: $QUESTION"
