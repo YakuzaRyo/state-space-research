@@ -9,9 +9,11 @@ AI Coding 框架研究任务的评估指标
 
 import os
 import re
+import sys
+import traceback
 from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 @dataclass
 class ResearchScore:
@@ -21,8 +23,40 @@ class ResearchScore:
     code_quality: float         # 代码质量 (0-30)
     references: int             # 引用数量
     new_hypotheses: int         # 新假设数量
-    verified_hypotheses: int     # 已验证假设数量
+    verified_hypotheses: int    # 已验证假设数量
+    status: str                 # 状态: "success", "crash", "error"
+    error_message: str          # 错误信息
     details: Dict[str, str]     # 详细评分说明
+
+    @staticmethod
+    def error(score: float, message: str) -> 'ResearchScore':
+        """创建错误结果"""
+        return ResearchScore(
+            total_score=score,
+            doc_quality=0,
+            code_quality=0,
+            references=0,
+            new_hypotheses=0,
+            verified_hypotheses=0,
+            status="error",
+            error_message=message,
+            details={}
+        )
+
+    @staticmethod
+    def crash() -> 'ResearchScore':
+        """创建崩溃结果"""
+        return ResearchScore(
+            total_score=0,
+            doc_quality=0,
+            code_quality=0,
+            references=0,
+            new_hypotheses=0,
+            verified_hypotheses=0,
+            status="crash",
+            error_message="研究过程崩溃",
+            details={}
+        )
 
 
 def evaluate_directions_doc(doc_path: Path) -> float:
@@ -246,6 +280,8 @@ def evaluate_research产出(research_dir: str = ".") -> ResearchScore:
         references=ref_count,
         new_hypotheses=hypo_count,
         verified_hypotheses=verified_count,
+        status="success",
+        error_message="",
         details={
             "doc_breakdown": f"文档质量: {doc_quality:.1f}/40",
             "code_breakdown": f"代码质量: {code_quality:.1f}/30 ({len(compilable)}个可编译)",
@@ -268,18 +304,55 @@ def print_score(score: ResearchScore):
     print(f"引用数量: {score.references} ({min(score.references, 15)}分)")
     print(f"新假设: {score.new_hypotheses} ({min(score.new_hypotheses * 2, 10)}分)")
     print(f"已验证: {score.verified_hypotheses} ({min(score.verified_hypotheses * 3, 10)}分)")
+
+    # 显示状态
+    if score.status == "crash":
+        print(f"状态: {score.status.upper()} ⚠️")
+    elif score.status == "error":
+        print(f"状态: {score.status.upper()} ⚠️")
+    else:
+        print(f"状态: {score.status.upper()} ✓")
+
     print("-" * 50)
     print("评分详情:")
     for key, val in score.details.items():
         print(f"  {key}: {val}")
+
+    if score.error_message:
+        print(f"\n错误信息: {score.error_message}")
+
     print("=" * 50)
+
+
+def safe_evaluate(research_dir: str) -> ResearchScore:
+    """安全评估，捕获所有异常"""
+    try:
+        return evaluate_research产出(research_dir)
+    except FileNotFoundError as e:
+        print(f"错误: 目录不存在 - {e}", file=sys.stderr)
+        return ResearchScore.error(0, f"目录不存在: {e}")
+    except PermissionError as e:
+        print(f"错误: 权限不足 - {e}", file=sys.stderr)
+        return ResearchScore.error(0, f"权限不足: {e}")
+    except Exception as e:
+        print(f"错误: {e}", file=sys.stderr)
+        traceback.print_exc()
+        return ResearchScore.crash()
 
 
 if __name__ == "__main__":
     import sys
 
-    research_dir = sys.argv[1] if len(sys.argv) > 1 else "/tmp/state-space-research"
+    research_dir = sys.argv[1] if len(sys.argv) > 1 else "."
 
     print(f"评估目录: {research_dir}")
-    score = evaluate_research产出(research_dir)
+    score = safe_evaluate(research_dir)
     print_score(score)
+
+    # 退出码: 0=成功, 1=错误, 2=崩溃
+    if score.status == "success":
+        sys.exit(0)
+    elif score.status == "error":
+        sys.exit(1)
+    else:
+        sys.exit(2)

@@ -96,16 +96,46 @@ echo ""
 echo -e "${GREEN}[STEP 2]${NC} 运行评估..."
 echo "=========================================="
 
-# 运行评估
-python3 evaluate.py . | tee /tmp/eval_output.txt
+# 运行评估并捕获退出码
+python3 evaluate.py . 2>&1 | tee /tmp/eval_output.txt
+EVAL_EXIT_CODE=${PIPESTATUS[0]}
 
-# 提取分数
-CURRENT_SCORE=$(grep "总分:" /tmp/eval_output.txt | awk '{print $2}')
-DOC_QUALITY=$(grep "文档质量:" /tmp/eval_output.txt | awk '{print $2}')
-CODE_QUALITY=$(grep "代码质量:" /tmp/eval_output.txt | awk '{print $2}')
-REFERENCES=$(grep "引用数量:" /tmp/eval_output.txt | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
-HYPOTHESES=$(grep "新假设:" /tmp/eval_output.txt | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
-VERIFIED=$(grep "已验证:" /tmp/eval_output.txt | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
+echo ""
+echo "=========================================="
+echo "评估退出码: $EVAL_EXIT_CODE"
+
+# 检查评估状态
+if [ $EVAL_EXIT_CODE -eq 0 ]; then
+    EVAL_STATUS="success"
+    echo -e "${GREEN}[OK]${NC} 评估成功"
+elif [ $EVAL_EXIT_CODE -eq 1 ]; then
+    EVAL_STATUS="error"
+    echo -e "${RED}[ERROR]${NC} 评估出错"
+elif [ $EVAL_EXIT_CODE -eq 2 ]; then
+    EVAL_STATUS="crash"
+    echo -e "${RED}[CRASH]${NC} 研究过程崩溃"
+else
+    EVAL_STATUS="unknown"
+    echo -e "${YELLOW}[WARN]${NC} 未知状态"
+fi
+echo "=========================================="
+
+# 提取分数 (如果评估失败则设为0)
+if [ "$EVAL_STATUS" = "success" ]; then
+    CURRENT_SCORE=$(grep "总分:" /tmp/eval_output.txt | awk '{print $2}')
+    DOC_QUALITY=$(grep "文档质量:" /tmp/eval_output.txt | awk '{print $2}')
+    CODE_QUALITY=$(grep "代码质量:" /tmp/eval_output.txt | awk '{print $2}')
+    REFERENCES=$(grep "引用数量:" /tmp/eval_output.txt | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
+    HYPOTHESES=$(grep "新假设:" /tmp/eval_output.txt | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
+    VERIFIED=$(grep "已验证:" /tmp/eval_output.txt | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
+else
+    CURRENT_SCORE=0
+    DOC_QUALITY=0
+    CODE_QUALITY=0
+    REFERENCES=0
+    HYPOTHESES=0
+    VERIFIED=0
+fi
 
 echo ""
 echo -e "${GREEN}[STEP 3]${NC} 记录结果..."
@@ -134,7 +164,19 @@ fi
 
 # 记录到 results.tsv
 echo -e "${GREEN}[INFO]${NC} 记录到 results.tsv"
-echo -e "commit\t$COMMIT\t$CURRENT_SCORE\t$DOC_QUALITY\t$CODE_QUALITY\t$REFERENCES\t$HYPOTHESES\t$VERIFIED\t$STATUS\t$DIRECTION - $QUESTION" >> results.tsv
+
+# 根据评估状态决定最终状态
+if [ "$EVAL_STATUS" = "crash" ]; then
+    FINAL_STATUS="crash"
+    echo -e "${RED}[CRASH]${NC} 记录为崩溃"
+elif [ "$EVAL_STATUS" = "error" ]; then
+    FINAL_STATUS="crash"
+    echo -e "${RED}[ERROR]${NC} 记录为崩溃"
+else
+    FINAL_STATUS="$STATUS"
+fi
+
+echo -e "commit\t$COMMIT\t$CURRENT_SCORE\t$DOC_QUALITY\t$CODE_QUALITY\t$REFERENCES\t$HYPOTHESES\t$VERIFIED\t$FINAL_STATUS\t$DIRECTION - $QUESTION" >> results.tsv
 
 # 计算研究时间
 END_TIME=$(date +%s)
@@ -146,9 +188,11 @@ echo -e "${GREEN}[STEP 4]${NC} 研究统计..."
 echo "=========================================="
 echo -e "总用时: ${ELAPSED_MIN}分钟"
 echo -e "分数: $CURRENT_SCORE"
-echo -e "状态: $STATUS"
+echo -e "评估状态: $EVAL_STATUS"
+echo -e "最终状态: $FINAL_STATUS"
 
-# 提交 (仅当 keep 时)
+# 提交 (仅当 keep 且评估成功时)
+if [ "$FINAL_STATUS" = "keep" ] && [ "$EVAL_STATUS" = "success" ]; then
 if [ "$STATUS" = "keep" ]; then
     echo ""
     echo -e "${GREEN}[STEP 5]${NC} 提交更改..."
