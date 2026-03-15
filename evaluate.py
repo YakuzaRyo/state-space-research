@@ -228,11 +228,20 @@ def evaluate_framework(base_path: Path) -> int:
 
     # 3. 编译检查 (15分)
     try:
+        import os
+        env = os.environ.copy()
+        cargo_path = os.path.expanduser("~/.cargo/bin")
+        if os.path.exists(cargo_path):
+            env["PATH"] = cargo_path + ":" + env.get("PATH", "")
+        # 使用绝对路径
+        manifest_path = cargo_toml.resolve()
+        cwd_path = framework_dir.resolve()
         result = subprocess.run(
-            ["cargo", "check", "--manifest-path", str(cargo_toml)],
+            ["cargo", "check", "--manifest-path", str(manifest_path)],
             capture_output=True,
             timeout=60,
-            cwd=str(framework_dir)
+            cwd=str(cwd_path),
+            env=env
         )
         if result.returncode == 0:
             score += 15
