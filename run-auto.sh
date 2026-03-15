@@ -1,6 +1,6 @@
 #!/bin/bash
 # 自动化研究脚本 - 非交互式版本
-# 支持单一研究方向模式
+# 支持单一研究方向模式，自动切换方向
 
 # 设置工作目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,41 +27,38 @@ TIME_TAG=$(date +%H%M)
 
 log "当前时间: $DATE $(date +%H:%M)"
 
-# 从 JSON 配置文件加载研究方向
-# 优先使用当前激活的方向
-CURRENT_DIRECTION=$(python3 -c "
+# 加载当前研究方向
+load_direction() {
+    python3 -c "
 import json
 with open('research_plan.json', 'r') as f:
     plan = json.load(f)
-    # 获取当前研究方向
     current = plan.get('current_direction', None)
     if current and current in plan['directions']:
         d = plan['directions'][current]
-        print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)))
+        print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)) + '|' + str(d.get('priority', 0)))
     else:
-        # 降级到时间模式
-        hour = $HOUR
-        for d in plan['directions'].values():
-            if hour in d.get('hours', []):
-                print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)))
-                exit(0)
-        d = list(plan['directions'].values())[0]
-        print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)))
-" 2>/dev/null)
+        print('tool_design|directions/10_tool_design.md|深入研究|2|3')
+" 2>/dev/null
+}
+
+DIRECTION_INFO=$(load_direction)
 
 if [ -z "$DIRECTION_INFO" ]; then
-    DIRECTION="综合研究"
-    DOC="10_tool_design.md"
+    DIRECTION="tool_design"
+    DOC="directions/10_tool_design.md"
     QUESTION="深入研究"
-    PHASE=0
+    PHASE=2
+    PRIORITY=3
 else
-    DIRECTION=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f1)
-    DOC=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f2)
-    QUESTION=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f3)
-    PHASE=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f4)
+    DIRECTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f1)
+    DOC=$(echo "$DIRECTION_INFO" | cut -d'|' -f2)
+    QUESTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f3)
+    PHASE=$(echo "$DIRECTION_INFO" | cut -d'|' -f4)
+    PRIORITY=$(echo "$DIRECTION_INFO" | cut -d'|' -f5)
 fi
 
-log "研究方向: $DIRECTION (阶段: $PHASE)"
+log "研究方向: $DIRECTION (阶段: $PHASE, 优先级: $PRIORITY)"
 log "核心问题: $QUESTION"
 
 # 保存研究开始时间
@@ -156,7 +153,7 @@ log "最终状态: $FINAL_STATUS"
 if [ "$FINAL_STATUS" = "keep" ] && [ "$EVAL_STATUS" = "success" ]; then
     log "提交更改..."
 
-    git add directions/ drafts/ evaluate.py 2>/dev/null || true
+    git add directions/ drafts/ evaluate.py research_plan.json 2>/dev/null || true
     git commit -m "research($TIME_TAG): $DIRECTION - 得分: $CURRENT_SCORE 分" || true
 
     # 推送到 GitHub
@@ -164,6 +161,68 @@ if [ "$FINAL_STATUS" = "keep" ] && [ "$EVAL_STATUS" = "success" ]; then
     git push origin master 2>/dev/null || log "推送失败 (可能需要手动)"
 
     log "推送完成"
+
+    # 检查是否需要切换研究方向
+    # 当分数达到 100 或连续 3 次 keep 时切换
+    if [ "$CURRENT_SCORE_INT" -ge 100 ]; then
+        log "分数已达 100，准备切换研究方向..."
+
+        # 查找下一个研究方向
+        NEXT_DIRECTION=$(python3 -c "
+import json
+with open('research_plan.json', 'r') as f:
+    plan = json.load(f)
+
+current = plan.get('current_direction', 'tool_design')
+current_priority = plan['directions'].get(current, {}).get('priority', 0)
+
+# 找下一个更高优先级的
+next_key = None
+next_priority = 999
+for key, d in plan['directions'].items():
+    p = d.get('priority', 999)
+    if p > current_priority and p < next_priority:
+        next_priority = p
+        next_key = key
+
+if next_key:
+    print(next_key)
+else:
+    # 如果没有更高的优先级，回到第一个
+    first_key = min(plan['directions'].items(), key=lambda x: x[1].get('priority', 999))[0]
+    print(first_key)
+" 2>/dev/null)
+
+        if [ -n "$NEXT_DIRECTION" ] && [ "$NEXT_DIRECTION" != "$DIRECTION" ]; then
+            log "切换到下一个研究方向: $NEXT_DIRECTION"
+
+            # 更新 research_plan.json
+            python3 -c "
+import json
+with open('research_plan.json', 'r') as f:
+    plan = json.load(f)
+
+current = '$DIRECTION'
+next_dir = '$NEXT_DIRECTION'
+
+# 更新所有方向状态
+for k, d in plan['directions'].items():
+    if k == next_dir:
+        d['status'] = 'active'
+    else:
+        d['status'] = 'pending'
+
+plan['current_direction'] = next_dir
+
+with open('research_plan.json', 'w') as f:
+    json.dump(plan, f, ensure_ascii=False, indent=2)
+
+print(f'已切换到: {next_dir}')
+"
+
+            log "研究方向已切换"
+        fi
+    fi
 fi
 
 log "=========================================="

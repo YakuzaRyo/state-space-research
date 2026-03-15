@@ -19,54 +19,58 @@ log "=========================================="
 log "调用 Claude Code 执行研究"
 log "=========================================="
 
-# 获取当前时间
-HOUR=$(date +%H)
-
-# 从 JSON 加载研究方向
-log "加载研究方向..."
-DIRECTION_INFO=$(python3 -c "
+# 获取当前研究方向
+load_direction() {
+    python3 -c "
 import json
-import sys
-hour = $HOUR
 with open('research_plan.json', 'r') as f:
     plan = json.load(f)
-    for d in plan['directions'].values():
-        if hour in d['hours']:
-            print(d['name'] + '|' + d['file'] + '|' + d['question'])
-            sys.exit(0)
-    d = list(plan['directions'].values())[0]
-    print(d['name'] + '|' + d['file'] + '|' + d['question'])
-" 2>/dev/null)
+    current = plan.get('current_direction', None)
+    if current and current in plan['directions']:
+        d = plan['directions'][current]
+        print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + current)
+    else:
+        print('工具设计|directions/10_tool_design.md|深入研究|tool_design')
+" 2>/dev/null
+}
+
+DIRECTION_INFO=$(load_direction)
 
 if [ -z "$DIRECTION_INFO" ]; then
-    DIRECTION="综合研究"
-    DOC="10_tool_design.md"
+    DIRECTION="工具设计"
+    DOC="directions/10_tool_design.md"
     QUESTION="深入研究"
+    DIR_KEY="tool_design"
 else
     DIRECTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f1)
     DOC=$(echo "$DIRECTION_INFO" | cut -d'|' -f2)
     QUESTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f3)
+    DIR_KEY=$(echo "$DIRECTION_INFO" | cut -d'|' -f4)
 fi
 
-log "研究方向: $DIRECTION"
+log "研究方向: $DIRECTION ($DIR_KEY)"
 log "核心问题: $QUESTION"
 
 # 研究指令
 RESEARCH_PROMPT="你在进行状态空间架构的自主研究。
 
+当前研究方向: $DIRECTION
+核心问题: $QUESTION
+
 请按照以下步骤执行：
 
-1. 阅读 $DOC 文件了解当前研究方向
+1. 阅读 $DOC 了解当前研究方向
 2. 针对核心问题「$QUESTION」进行深度研究
 3. 搜索相关论文和项目
 4. 更新研究文档，添加：
-   - 研究发现
-   - 架构洞察
-   - 待验证假设
-   - 下一步研究方向
+   - ## 研究发现 (你的调研结果)
+   - ## 架构洞察 (对新架构的新理解)
+   - ## 待验证假设 (下一步需要验证的想法)
+   - ## 下一步研究方向
 5. 如有实现想法，在 drafts/ 目录创建 Rust 代码草稿
 
 注意：
+- 这是单一方向研究模式，专注当前方向
 - 研究时间约 25-40 分钟
 - 使用中文
 - 完成后自动提交"
@@ -103,7 +107,7 @@ if [ $EXIT_CODE -eq 0 ]; then
             log "评估成功"
 
             # 提交
-            git add directions/ drafts/ evaluate.py 2>/dev/null || true
+            git add directions/ drafts/ evaluate.py research_plan.json 2>/dev/null || true
             git commit -m "research: $DIRECTION - 自主研究完成" 2>/dev/null || true
 
             # 推送
