@@ -1,0 +1,28 @@
+[package]
+name = "state-space-framework"
+version = "0.1.0"
+edition = "2021"
+description = "通过程序框架强制定义边界，让 AI 的产出一定遵循预先定义好的规范"
+authors = ["State Space Research"]
+license = "MIT"
+
+[dependencies]
+# 类型系统
+thiserror = "1.0"
+anyhow = "1.0"
+
+# 异步
+tokio = { version = "1.0", features = ["full"] }
+
+# 序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# 日志
+log = "0.4"
+env_logger = "0.10"
+
+[dev-dependencies]
+
+[features]
+default = []
