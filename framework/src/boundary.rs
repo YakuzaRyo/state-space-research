@@ -60,6 +60,10 @@ impl Boundary {
         self
     }
 
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     pub fn check_operation(&self, operation: &str, permission: Permission) -> Result<(), String> {
         // 检查权限级别
         if permission < self.required_permission {
