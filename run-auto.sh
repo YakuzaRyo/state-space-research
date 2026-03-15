@@ -78,14 +78,14 @@ EVAL_EXIT=$?
 
 echo "$EVAL_OUTPUT"
 
-# 提取分数
+# 提取分数 (使用新的简洁格式)
 if [ $EVAL_EXIT -eq 0 ]; then
-    CURRENT_SCORE=$(echo "$EVAL_OUTPUT" | grep "总分:" | awk '{print $2}' | cut -d'/' -f1)
-    DOC_QUALITY=$(echo "$EVAL_OUTPUT" | grep "文档质量:" | awk '{print $2}')
-    CODE_QUALITY=$(echo "$EVAL_OUTPUT" | grep "代码质量:" | awk '{print $2}')
-    REFERENCES=$(echo "$EVAL_OUTPUT" | grep "引用数量:" | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
-    HYPOTHESES=$(echo "$EVAL_OUTPUT" | grep "新假设:" | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
-    VERIFIED=$(echo "$EVAL_OUTPUT" | grep "已验证:" | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
+    CURRENT_SCORE=$(echo "$EVAL_OUTPUT" | grep "^score:" | awk '{print $2}')
+    DOC_QUALITY=$(echo "$EVAL_OUTPUT" | grep "^doc_quality:" | awk '{print $2}')
+    CODE_QUALITY=$(echo "$EVAL_OUTPUT" | grep "^code_quality:" | awk '{print $2}')
+    REFERENCES=$(echo "$EVAL_OUTPUT" | grep "^references:" | awk '{print $2}')
+    HYPOTHESES=$(echo "$EVAL_OUTPUT" | grep "^hypotheses:" | awk '{print $2}')
+    VERIFIED=$(echo "$EVAL_OUTPUT" | grep "^verified:" | awk '{print $2}')
     EVAL_STATUS="success"
 
     log "评估成功，分数: $CURRENT_SCORE"
@@ -114,8 +114,8 @@ log "上次分数: $LAST_SCORE"
 log "当前分数: $CURRENT_SCORE"
 
 # 比较分数 (转换为整数比较)
-LAST_SCORE_INT=$(echo "$LAST_SCORE" | cut -d'.' -f1)
-CURRENT_SCORE_INT=$(echo "$CURRENT_SCORE" | cut -d'.' -f1)
+LAST_SCORE_INT=$(echo "$LAST_SCORE" | cut -d'.' -f1 2>/dev/null || echo "0")
+CURRENT_SCORE_INT=$(echo "$CURRENT_SCORE" | cut -d'.' -f1 2>/dev/null || echo "0")
 
 if [ "$LAST_SCORE" = "0" ] || [ "$CURRENT_SCORE_INT" -ge "$LAST_SCORE_INT" ]; then
     STATUS="keep"
@@ -163,7 +163,7 @@ if [ "$FINAL_STATUS" = "keep" ] && [ "$EVAL_STATUS" = "success" ]; then
     log "推送完成"
 
     # 检查是否需要切换研究方向
-    # 当分数达到 100 或连续 3 次 keep 时切换
+    # 当分数达到 100 时切换
     if [ "$CURRENT_SCORE_INT" -ge 100 ]; then
         log "分数已达 100，准备切换研究方向..."
 

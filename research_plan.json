@@ -2,12 +2,9 @@
   "version": "3.0",
   "name": "状态空间架构研究计划",
   "description": "深入探索状态空间架构作为下一代 AI 工程系统的理论基础与实现路径",
-
   "research_goal": "通过程序框架（Rust类型系统）强制定义边界，让 AI 的产出一定遵循预先定义好的规范",
-
-  "current_direction": "tool_design",
+  "current_direction": "llm_navigator",
   "research_mode": "single",
-
   "integration": {
     "target": "Rust 框架: state-space-framework",
     "description": "将所有研究方向整合为一个可落地的 Rust 框架",
@@ -20,21 +17,54 @@
       "comparison": "对比模块 - 与现有系统对比分析"
     },
     "roadmap": [
-      {"phase": 1, "name": "核心类型系统", "directions": ["core_principles", "rust_type_system"]},
-      {"phase": 2, "name": "工具设计", "directions": ["tool_design"]},
-      {"phase": 3, "name": "LLM 集成", "directions": ["llm_navigator"]},
-      {"phase": 4, "name": "分层架构", "directions": ["layered_design"]},
-      {"phase": 5, "name": "对比验证", "directions": ["comparison"]}
+      {
+        "phase": 1,
+        "name": "核心类型系统",
+        "directions": [
+          "core_principles",
+          "rust_type_system"
+        ]
+      },
+      {
+        "phase": 2,
+        "name": "工具设计",
+        "directions": [
+          "tool_design"
+        ]
+      },
+      {
+        "phase": 3,
+        "name": "LLM 集成",
+        "directions": [
+          "llm_navigator"
+        ]
+      },
+      {
+        "phase": 4,
+        "name": "分层架构",
+        "directions": [
+          "layered_design"
+        ]
+      },
+      {
+        "phase": 5,
+        "name": "对比验证",
+        "directions": [
+          "comparison"
+        ]
+      }
     ]
   },
-
   "directions": {
     "core_principles": {
       "id": "01",
       "name": "核心原则",
       "question": "如何让错误在设计上不可能发生?",
       "file": "directions/01_core_principles.md",
-      "hours": [0, 12],
+      "hours": [
+        0,
+        12
+      ],
       "priority": 1,
       "status": "pending",
       "phase": 1,
@@ -50,7 +80,10 @@
       "name": "实现技术",
       "question": "如何用Rust类型系统实现状态空间?",
       "file": "directions/09_rust_type_system.md",
-      "hours": [6, 18],
+      "hours": [
+        6,
+        18
+      ],
       "priority": 2,
       "status": "pending",
       "phase": 1,
@@ -66,9 +99,12 @@
       "name": "工具设计",
       "question": "如何设计'无法产生错误'的工具?",
       "file": "directions/10_tool_design.md",
-      "hours": [8, 20],
+      "hours": [
+        8,
+        20
+      ],
       "priority": 3,
-      "status": "active",
+      "status": "pending",
       "phase": 2,
       "topics": [
         "纯函数工具设计",
@@ -82,9 +118,12 @@
       "name": "LLM导航器",
       "question": "LLM作为启发式函数的理论基础?",
       "file": "directions/08_llm_as_navigator.md",
-      "hours": [4, 16],
+      "hours": [
+        4,
+        16
+      ],
       "priority": 4,
-      "status": "pending",
+      "status": "active",
       "phase": 3,
       "topics": [
         "从'生成器'到'导航器'的范式转换",
@@ -98,7 +137,10 @@
       "name": "分层设计",
       "question": "Syntax→Semantic→Pattern→Domain如何转换?",
       "file": "directions/07_layered_design.md",
-      "hours": [2, 14],
+      "hours": [
+        2,
+        14
+      ],
       "priority": 5,
       "status": "pending",
       "phase": 4,
@@ -114,7 +156,10 @@
       "name": "对比分析",
       "question": "Claude Code/OpenCode的根本缺陷是什么?",
       "file": "directions/11_comparison.md",
-      "hours": [10, 22],
+      "hours": [
+        10,
+        22
+      ],
       "priority": 6,
       "status": "pending",
       "phase": 5,
@@ -126,33 +171,60 @@
       ]
     }
   },
-
   "evaluation": {
     "total_score": 100,
     "metrics": {
       "doc_quality": {
         "weight": 40,
-        "checks": ["核心问题", "研究发现", "架构洞察", "待验证假设"]
+        "checks": [
+          "核心问题",
+          "研究发现",
+          "架构洞察",
+          "待验证假设"
+        ]
       },
       "code_quality": {
         "weight": 30,
-        "checks": ["可编译性", "核心类型(struct/trait/enum/impl)", "关键模式(ToolState/ToolToken/ToolChain)"]
+        "checks": [
+          "可编译性",
+          "核心类型(struct/trait/enum/impl)",
+          "关键模式(ToolState/ToolToken/ToolChain)"
+        ]
       },
-      "references": {"weight": 15, "per_item": 1, "max": 15},
-      "innovation": {"weight": 10, "per_hypothesis": 2, "max": 10},
-      "verification": {"weight": 10, "per_verified": 3, "max": 10}
+      "references": {
+        "weight": 15,
+        "per_item": 1,
+        "max": 15
+      },
+      "innovation": {
+        "weight": 10,
+        "per_hypothesis": 2,
+        "max": 10
+      },
+      "verification": {
+        "weight": 10,
+        "per_verified": 3,
+        "max": 10
+      }
     }
   },
-
   "output_format": {
-    "required_sections": ["核心问题", "研究发现", "架构洞察", "待验证假设", "下一步研究方向"],
-    "optional_sections": ["关键资源", "代码草稿"],
+    "required_sections": [
+      "核心问题",
+      "研究发现",
+      "架构洞察",
+      "待验证假设",
+      "下一步研究方向"
+    ],
+    "optional_sections": [
+      "关键资源",
+      "代码草稿"
+    ],
     "hypothesis_markdown": {
       "pending": "- [ ] ",
       "verified": "- [x] "
     }
   },
-
   "time_budget": {
     "research_interval_minutes": 30,
     "research_time_minutes": 25,
