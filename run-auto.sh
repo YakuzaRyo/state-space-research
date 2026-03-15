@@ -1,6 +1,6 @@
 #!/bin/bash
 # 自动化研究脚本 - 非交互式版本
-# 由 cron 或其他自动化工具调用
+# 支持单一研究方向模式
 
 # 设置工作目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,32 +28,40 @@ TIME_TAG=$(date +%H%M)
 log "当前时间: $DATE $(date +%H:%M)"
 
 # 从 JSON 配置文件加载研究方向
-DIRECTION_INFO=$(python3 -c "
+# 优先使用当前激活的方向
+CURRENT_DIRECTION=$(python3 -c "
 import json
-import sys
-hour = $HOUR
 with open('research_plan.json', 'r') as f:
     plan = json.load(f)
-    for d in plan['directions'].values():
-        if hour in d['hours']:
-            print(d['name'] + '|' + d['file'] + '|' + d['question'])
-            sys.exit(0)
-    # 默认
-    d = list(plan['directions'].values())[0]
-    print(d['name'] + '|' + d['file'] + '|' + d['question'])
+    # 获取当前研究方向
+    current = plan.get('current_direction', None)
+    if current and current in plan['directions']:
+        d = plan['directions'][current]
+        print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)))
+    else:
+        # 降级到时间模式
+        hour = $HOUR
+        for d in plan['directions'].values():
+            if hour in d.get('hours', []):
+                print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)))
+                exit(0)
+        d = list(plan['directions'].values())[0]
+        print(d['name'] + '|' + d['file'] + '|' + d['question'] + '|' + str(d.get('phase', 0)))
 " 2>/dev/null)
 
 if [ -z "$DIRECTION_INFO" ]; then
     DIRECTION="综合研究"
     DOC="10_tool_design.md"
     QUESTION="深入研究"
+    PHASE=0
 else
-    DIRECTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f1)
-    DOC=$(echo "$DIRECTION_INFO" | cut -d'|' -f2)
-    QUESTION=$(echo "$DIRECTION_INFO" | cut -d'|' -f3)
+    DIRECTION=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f1)
+    DOC=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f2)
+    QUESTION=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f3)
+    PHASE=$(echo "$CURRENT_DIRECTION" | cut -d'|' -f4)
 fi
 
-log "研究方向: $DIRECTION"
+log "研究方向: $DIRECTION (阶段: $PHASE)"
 log "核心问题: $QUESTION"
 
 # 保存研究开始时间
@@ -75,7 +83,7 @@ echo "$EVAL_OUTPUT"
 
 # 提取分数
 if [ $EVAL_EXIT -eq 0 ]; then
-    CURRENT_SCORE=$(echo "$EVAL_OUTPUT" | grep "总分:" | awk '{print $2}')
+    CURRENT_SCORE=$(echo "$EVAL_OUTPUT" | grep "总分:" | awk '{print $2}' | cut -d'/' -f1)
     DOC_QUALITY=$(echo "$EVAL_OUTPUT" | grep "文档质量:" | awk '{print $2}')
     CODE_QUALITY=$(echo "$EVAL_OUTPUT" | grep "代码质量:" | awk '{print $2}')
     REFERENCES=$(echo "$EVAL_OUTPUT" | grep "引用数量:" | awk -F'[()]' '{print $2}' | cut -d' ' -f1)
@@ -108,7 +116,11 @@ fi
 log "上次分数: $LAST_SCORE"
 log "当前分数: $CURRENT_SCORE"
 
-if [ "$LAST_SCORE" = "0" ] || [ "$CURRENT_SCORE" -ge "$LAST_SCORE" ] 2>/dev/null; then
+# 比较分数 (转换为整数比较)
+LAST_SCORE_INT=$(echo "$LAST_SCORE" | cut -d'.' -f1)
+CURRENT_SCORE_INT=$(echo "$CURRENT_SCORE" | cut -d'.' -f1)
+
+if [ "$LAST_SCORE" = "0" ] || [ "$CURRENT_SCORE_INT" -ge "$LAST_SCORE_INT" ]; then
     STATUS="keep"
     log "分数提高或持平 → KEEP"
 else

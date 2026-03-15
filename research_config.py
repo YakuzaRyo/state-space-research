@@ -2,11 +2,13 @@
 """
 研究配置加载器
 从 research_plan.json 加载研究方向配置
+支持单一研究方向模式
 """
 
 import json
 import os
 from pathlib import Path
+from datetime import datetime
 
 def load_research_plan(json_path: str = None) -> dict:
     """加载研究计划 JSON"""
@@ -16,97 +18,202 @@ def load_research_plan(json_path: str = None) -> dict:
     with open(json_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def get_direction_by_hour(hour: int, plan: dict = None) -> dict:
-    """根据小时数获取研究方向"""
+def get_current_direction(plan: dict = None) -> dict:
+    """获取当前研究方向"""
     if plan is None:
         plan = load_research_plan()
 
-    for key, direction in plan['directions'].items():
-        if hour in direction['hours']:
-            return direction
+    # 优先使用配置中的当前方向
+    current = plan.get('current_direction', None)
 
-    # 默认返回第一个方向
-    return list(plan['directions'].values())[0]
+    if current and current in plan['directions']:
+        direction = plan['directions'][current]
+        direction['_key'] = current
+        return direction
 
-def get_all_directions(plan: dict = None) -> list:
-    """获取所有研究方向"""
+    # 降级到时间模式
+    hour = int(datetime.now().hour)
+    for key, d in plan['directions'].items():
+        if hour in d.get('hours', []):
+            d['_key'] = key
+            return d
+
+    # 默认返回第一个
+    first = list(plan['directions'].values())[0]
+    first['_key'] = list(plan['directions'].keys())[0]
+    return first
+
+def get_direction_by_key(key: str, plan: dict = None) -> dict:
+    """根据 key 获取研究方向"""
     if plan is None:
         plan = load_research_plan()
-    return list(plan['directions'].values())
 
-def print_current_direction(hour: int = None):
+    if key in plan['directions']:
+        direction = plan['directions'][key]
+        direction['_key'] = key
+        return direction
+    return None
+
+def get_directions_by_phase(phase: int, plan: dict = None) -> list:
+    """根据阶段获取研究方向"""
+    if plan is None:
+        plan = load_research_plan()
+
+    results = []
+    for key, d in plan['directions'].items():
+        if d.get('phase') == phase:
+            d['_key'] = key
+            results.append(d)
+    return sorted(results, key=lambda x: x.get('priority', 999))
+
+def get_next_direction(plan: dict = None) -> dict:
+    """获取下一个研究方向（按优先级）"""
+    if plan is None:
+        plan = load_research_plan()
+
+    current = plan.get('current_direction', None)
+
+    # 找到当前方向的优先级
+    current_priority = 0
+    if current and current in plan['directions']:
+        current_priority = plan['directions'][current].get('priority', 0)
+
+    # 找下一个更高优先级的
+    for key, d in sorted(plan['directions'].items(), key=lambda x: x[1].get('priority', 999)):
+        if d.get('priority', 999) > current_priority:
+            d['_key'] = key
+            return d
+
+    return None
+
+def switch_direction(key: str) -> bool:
+    """切换当前研究方向"""
+    plan_path = Path(__file__).parent / "research_plan.json"
+    plan = load_research_plan(plan_path)
+
+    if key not in plan['directions']:
+        return False
+
+    plan['current_direction'] = key
+
+    # 更新所有方向状态
+    for k, d in plan['directions'].items():
+        if k == key:
+            d['status'] = 'active'
+        else:
+            d['status'] = 'pending'
+
+    with open(plan_path, 'w', encoding='utf-8') as f:
+        json.dump(plan, f, ensure_ascii=False, indent=2)
+
+    return True
+
+def print_current_direction():
     """打印当前研究方向"""
-    if hour is None:
-        hour = int(__import__('datetime').datetime.now().strftime('%H'))
-
+    direction = get_current_direction()
     plan = load_research_plan()
-    direction = get_direction_by_hour(hour, plan)
 
-    print("=" * 50)
-    print(f"当前时间: {hour}:00")
-    print("=" * 50)
-    print(f"研究方向: {direction['name']}")
-    print(f"核心问题: {direction['question']}")
-    print(f"文档文件: {direction['file']}")
-    print(f"时间窗口: {direction['hours']}")
-    print("-" * 50)
+    print("=" * 60)
+    print(f"研究模式: {plan.get('research_mode', 'single')}")
+    print(f"当前方向: {direction.get('name', 'Unknown')}")
+    print("=" * 60)
+    print(f"核心问题: {direction.get('question', '')}")
+    print(f"文档文件: {direction.get('file', '')}")
+    print(f"优先级: {direction.get('priority', 0)}")
+    print(f"阶段: {direction.get('phase', 0)}")
+    print(f"状态: {direction.get('status', 'unknown')}")
+    print("-" * 60)
     print("研究主题:")
-    for topic in direction['topics']:
+    for topic in direction.get('topics', []):
         print(f"  - {topic}")
-    print("=" * 50)
+    print("=" * 60)
 
-def print_evaluation_info():
-    """打印评估指标信息"""
+def print_integration_info():
+    """打印整合信息"""
     plan = load_research_plan()
-    eval_config = plan['evaluation']
+    integration = plan.get('integration', {})
 
-    print("\n" + "=" * 50)
-    print("评估指标")
-    print("=" * 50)
+    print("\n" + "=" * 60)
+    print("框架整合目标")
+    print("=" * 60)
+    print(f"目标: {integration.get('target', 'N/A')}")
+    print(f"描述: {integration.get('description', 'N/A')}")
+    print("-" * 60)
+    print("模块映射:")
+    modules = integration.get('modules', {})
+    for key, desc in modules.items():
+        print(f"  {key}: {desc}")
+    print("-" * 60)
+    print("路线图:")
+    for roadmap in integration.get('roadmap', []):
+        print(f"  阶段 {roadmap.get('phase', 0)}: {roadmap.get('name', '')}")
+        for dir_key in roadmap.get('directions', []):
+            if dir_key in plan['directions']:
+                print(f"    - {plan['directions'][dir_key]['name']}")
+    print("=" * 60)
 
-    for metric, config in eval_config['metrics'].items():
-        if isinstance(config, dict) and 'weight' in config:
-            print(f"\n{metric}: {config['weight']}分")
-            if 'checks' in config:
-                for check in config['checks']:
-                    print(f"  - {check}")
-            if 'per_item' in config:
-                print(f"  每项: +{config['per_item']}分 (上限: {config['max']})")
-
-def test_json():
-    """测试 JSON 加载"""
+def print_phase_status():
+    """打印阶段状态"""
     plan = load_research_plan()
 
-    print("=" * 50)
-    print("研究计划信息")
-    print("=" * 50)
-    print(f"版本: {plan['version']}")
-    print(f"名称: {plan['name']}")
-    print(f"目标: {plan['research_goal']}")
-    print(f"总分数: {plan['evaluation']['total_score']}")
-    print(f"研究方向数: {len(plan['directions'])}")
+    print("\n" + "=" * 60)
+    print("研究阶段状态")
+    print("=" * 60)
 
-    # 测试按小时获取方向
-    print("\n--- 按时间测试 ---")
-    for hour in [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]:
-        direction = get_direction_by_hour(hour, plan)
-        print(f"{hour:02d}:00 -> {direction['name']}")
+    # 按阶段分组
+    phases = {}
+    for key, d in plan['directions'].items():
+        phase = d.get('phase', 0)
+        if phase not in phases:
+            phases[phase] = []
+        phases[phase].append({
+            'key': key,
+            'name': d.get('name', ''),
+            'priority': d.get('priority', 0),
+            'status': d.get('status', 'unknown')
+        })
 
-    print_evaluation_info()
+    for phase in sorted(phases.keys()):
+        print(f"\n阶段 {phase}:")
+        for d in sorted(phases[phase], key=lambda x: x['priority']):
+            status_icon = "✓" if d['status'] == 'active' else "○"
+            print(f"  [{status_icon}] {d['name']} (优先级: {d['priority']})")
+
+    print("=" * 60)
 
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == "--hour":
-            hour = int(sys.argv[2]) if len(sys.argv) > 2 else None
-            print_current_direction(hour)
-        elif sys.argv[1] == "--eval":
-            print_evaluation_info()
+        if sys.argv[1] == "--current":
+            print_current_direction()
+        elif sys.argv[1] == "--integration":
+            print_integration_info()
+        elif sys.argv[1] == "--phase":
+            print_phase_status()
+        elif sys.argv[1] == "--switch" and len(sys.argv) > 2:
+            key = sys.argv[2]
+            if switch_direction(key):
+                print(f"已切换到研究方向: {key}")
+            else:
+                print(f"切换失败: 未知方向 {key}")
         else:
             print("用法:")
             print("  python3 research_config.py           # 测试加载")
-            print("  python3 research_config.py --hour   # 当前研究方向")
-            print("  python3 research_config.py --eval  # 评估指标")
+            print("  python3 research_config.py --current  # 当前研究方向")
+            print("  python3 research_config.py --integration # 整合信息")
+            print("  python3 research_config.py --phase    # 阶段状态")
+            print("  python3 research_config.py --switch <key> # 切换方向")
     else:
-        test_json()
+        plan = load_research_plan()
+        print("=" * 60)
+        print("研究计划信息")
+        print("=" * 60)
+        print(f"版本: {plan['version']}")
+        print(f"名称: {plan['name']}")
+        print(f"目标: {plan['research_goal']}")
+        print(f"研究模式: {plan.get('research_mode', 'single')}")
+        print(f"当前方向: {plan.get('current_direction', 'N/A')}")
+        print(f"总分数: {plan['evaluation']['total_score']}")
+        print(f"研究方向数: {len(plan['directions'])}")
+        print("=" * 60)
