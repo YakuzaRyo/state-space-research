@@ -297,13 +297,13 @@ def print_score(score: ResearchScore):
     print("=" * 50)
     print("         研究评估报告")
     print("=" * 50)
-    print(f"总分: {score.total_score:.1f}/100")
+    print(f"score: {score.total_score:.1f}")
     print("-" * 50)
-    print(f"文档质量: {score.doc_quality:.1f}/40")
-    print(f"代码质量: {score.code_quality:.1f}/30")
-    print(f"引用数量: {score.references} ({min(score.references, 15)}分)")
-    print(f"新假设: {score.new_hypotheses} ({min(score.new_hypotheses * 2, 10)}分)")
-    print(f"已验证: {score.verified_hypotheses} ({min(score.verified_hypotheses * 3, 10)}分)")
+    print(f"doc_quality: {score.doc_quality:.1f}")
+    print(f"code_quality: {score.code_quality:.1f}")
+    print(f"references: {score.references}")
+    print(f"hypotheses: {score.new_hypotheses}")
+    print(f"verified: {score.verified_hypotheses}")
 
     # 显示状态
     if score.status == "crash":
