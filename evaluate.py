@@ -266,6 +266,9 @@ def evaluate_framework(base_path: Path) -> tuple:
             if result.returncode == 0:
                 test_coverage += 10
                 details.append("测试: +10 测试可编译")
+            else:
+                test_coverage -= 3
+                details.append("测试: -3 测试编译失败")
         except:
             details.append("测试: 运行失败")
 
